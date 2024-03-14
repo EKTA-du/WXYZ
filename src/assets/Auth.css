@@ -1,0 +1,149 @@
+@font-face {
+	font-family: "Centauri";
+	src: url('./fonts/Centauri.otf'),
+		url('./fonts/Centauri.woff') format('woff');
+}
+
+form {
+	justify-content: left;
+	align-items: left;
+	display: block;
+	width: 100%;
+}
+
+.header {
+	width: 120%;
+	margin-top: 10px;
+	color: white;
+	padding: 0.5rem;
+	display: flex;
+	justify-content: space-between;
+}
+
+.logo {
+	font-family: "Centauri";
+	font-size: 1.5rem;
+	font-weight: bold;
+	padding-left: 1rem;
+}
+
+.menu {
+	display: flex;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.menu ul li {
+	padding: 0 1rem;
+}
+
+.menu ul li a {
+	color: white;
+	text-decoration: none;
+}
+
+
+.border-container {
+
+	margin: auto;
+	width: 80%;
+	align-items: center;
+}
+
+.vertical-center {
+	border: 10px solid rgb(0, 0, 0);
+	padding: 20px;
+	border-radius: 20px;
+	height: 80%;
+	width: 80%;
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+	-ms-border-radius: 20px;
+	-o-border-radius: 20px;
+	background-color: rgba(0, 0, 0, .15);
+	position: absolute;
+	display: flex;
+}
+
+#SigninEmail,
+#SigninPassword,
+#SignupName,
+#SignupEmail,
+#SignupPassword,
+#SignupConfirmPassword {
+	background-color: rgba(255, 255, 255, .15);
+	backdrop-filter: blur(5px);
+	color: white;
+	border: none;
+	margin: 5px;
+}
+
+#form2 {
+	color: white;
+}
+
+#form1 {
+	color: white;
+}
+
+.main-container {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	height: 60%;
+	width: 100%;
+	align-items: center;
+}
+
+.buttons-container {
+	padding: 10px;
+	display: flex;
+	justify-content: space-between;
+}
+
+#option1 {
+	cursor: pointer;
+}
+
+#option1:hover {
+	color: #1409a7;
+}
+
+#option2 {
+	cursor: pointer;
+}
+
+#option2:hover {
+	color: #1409a7;
+}
+
+.footer {
+	color: rgb(190, 163, 163);
+	position: absolute;
+	bottom: 0;
+}
+
+label {
+	background-color: transparent !important;
+}
+
+.form-floating input:focus+label {
+	background-color: transparent !important;
+}
+
+.content {
+	height: 100%;
+	width: 60%;
+	z-index: 999;
+	color: aquamarine;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+}
+
+.form-container {
+	width: 45%;
+}

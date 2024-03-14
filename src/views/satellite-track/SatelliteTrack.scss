@@ -1,0 +1,229 @@
+#cesiumContainer {
+  height: 100%;
+}
+
+.cesium-viewer-bottom {
+  display: none;
+}
+
+.operate_container {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 800;
+  display: flex;
+
+  .menu_button {
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    border-radius: 14%;
+    padding: 0;
+    vertical-align: middle;
+    z-index: 0;
+    position: relative;
+    background: #303336;
+    border: 1px solid #444;
+    color: #edffff;
+    fill: #edffff;
+    cursor: pointer;
+    margin-right: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .menu_button:hover {
+    color: #fff;
+    fill: #fff;
+    background: #48b;
+    border-color: #aef;
+    box-shadow: 0 0 8px #fff;
+  }
+}
+
+#satDataCard {
+  top: 100px;
+  right: 5px;
+  z-index: 999;
+  position: absolute;
+}
+
+.add_satellite {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+
+  .upload_button {
+    margin: 0 10px;
+  }
+}
+
+.el-drawer {
+  background-color: rgba($color: #303336, $alpha: 0.9);
+  color: #fff;
+
+  .satellite_type {
+    color: #95D475;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 10px;
+    padding-left: 0;
+  }
+
+  .el-drawer__header {
+    background-color: #303336;
+    color: inherit;
+    margin: 0
+  }
+
+  .el-checkbox {
+    color: inherit;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
+  transition: all .2s ease-in-out;
+}
+
+.icon {
+  display: flex;
+}
+
+.card {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(1px);
+  color: #8BACD9;
+  border-radius: 16px;
+  padding: 24px;
+  width: 327px;
+  font-size: 0.5rem;
+  box-shadow: 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+
+  @media screen and (min-width: 768px) {
+    font-size: 0.6rem;
+    width: 350px;
+    padding-bottom: 5px;
+  }
+
+  &:hover {
+    box-shadow: 0 25px 50px 0 rgba(255, 250, 250, 0.2);
+  }
+
+  .card__product-img {
+    position: relative;
+    border-radius: 8px;
+    height: 100px;
+    overflow: hidden;
+
+    @mixin hoverOpacity {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.25s ease-out;
+    }
+  }
+
+  .card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card__content {
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0 16px 0;
+
+    @media screen and (min-width: 768px) {
+      padding: 24px 0;
+    }
+
+    .card__name {
+      color: white;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .card__description {
+      font-size: 0.8rem;
+      font-weight: lighter;
+    }
+
+    .card__content-bottom {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 4px;
+
+      @media screen and (min-width: 768px) {
+        padding-top: 6px;
+      }
+
+      >* {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+      }
+
+    }
+  }
+
+  .card__price {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #00FFF8;
+  }
+
+  .card__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #2E405A;
+    padding-top: 5px;
+
+    .card__avatar {
+      display: flex;
+      border-radius: 90px;
+      border: 1px solid white;
+
+      img {
+        width: 33px;
+      }
+    }
+
+    .card__autor--alt-color {
+      color: white;
+      cursor: pointer;
+
+      &:hover {
+        color: #00FFF8;
+      }
+    }
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: 0.25s ease-out;
+}
+
+.fade-leave-to,
+.fade-enter-from {
+  opacity: 0;
+}
