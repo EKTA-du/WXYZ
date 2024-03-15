@@ -24,6 +24,9 @@
     <div class="menu_button" @click="handleLogout" title="Logout">
       <img src="../../assets/logout.svg" width="24" height="24" alt="Logout" />
     </div>
+    <div class="menu_button" @click="RedirecToGitHub" title="GitHub">
+      <img src="../../assets/github.svg" width="24" height="24" alt="Github" />
+    </div>
   </div>
   <div v-if="selectedSatellite" id="satDataCard" class="card">
     <div class="card__product-img">
@@ -111,10 +114,7 @@ import SatelliteEntity from "@/js/SatelliteEntity";
 
 let allSatellite;
 
-window.CESIUM_BASE_URL =
-  import.meta.env.MODE === "development"
-    ? "/cesium"
-    : "/satellite-track/cesium";
+window.CESIUM_BASE_URL = "/cesium";
 
 let viewer;
 const totalSeconds = 86400;
@@ -141,6 +141,7 @@ function initCesium() {
   };
 
   viewer = new Cesium.Viewer("cesiumContainer", {
+    imageryProvider: new Cesium.IonImageryProvider({ assetId: 3812 }),
     baseLayerPicker: true,
     geocoder: false,
     navigationHelpButton: false,
@@ -171,6 +172,21 @@ function initCesium() {
     97.416,
     37.1
   );
+
+  const imageryLayers = viewer.imageryLayers;
+  const nightLayer = imageryLayers.get(0);
+  const dayLayer = new Cesium.ImageryLayer(
+    new Cesium.IonImageryProvider({ assetId: 3845 })
+  );
+  imageryLayers.add(dayLayer);
+  imageryLayers.lowerToBottom(dayLayer);
+  dayLayer.show = true;
+  viewer.scene.globe.enableLighting = true;
+  viewer.clock.shouldAnimate = true;
+  nightLayer.dayAlpha = 0;  
+
+  viewer.resolutionScale = 3;
+
 }
 
 function initTimeLine() {
@@ -207,6 +223,8 @@ function addCesiumEventListener() {
       pickedFeature.id.path.show = new Cesium.ConstantProperty(true);
       pickedFeature.id.label.distanceDisplayCondition = undefined;
       clickedSatelliteArray.push(pickedFeature);
+    }else{
+      selectedSatellite.value = null;
     }
   },
   Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -266,6 +284,10 @@ function handleLogout() {
     .catch(() => {
       console.log("Cancel");
     });
+}
+
+function RedirecToGitHub() {
+  window.open("https://github.com/HackerDMK", "_blank");
 }
 
 watch(checked, (newValue) => {

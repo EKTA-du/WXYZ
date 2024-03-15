@@ -65,6 +65,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import { userSignup, userLogin } from '../../http/index';
 
+const SatModel = new URL('@/assets/models/ISS_stationary.glb', import.meta.url).href;
+
+
 export default {
   data() {
     return {
@@ -83,7 +86,7 @@ export default {
 
     camera.position.z = 5;
 
-    loader.load("src/models/ISS_stationary.glb", (gltf) => {
+    loader.load(SatModel, (gltf) => {
       model = gltf.scene;
 
       const scaleFactor = 0.045;

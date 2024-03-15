@@ -1,6 +1,8 @@
 import { twoline2satrec, propagate } from "satellite.js";
 import * as Cesium from "cesium";
 
+const SatModel = new URL('@/assets/models/ISS_stationary.glb', import.meta.url).href;
+
 class SatelliteEntity {
 
     constructor(tle = "", options = {}) {
@@ -52,16 +54,16 @@ class SatelliteEntity {
             description: this.name,
             availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({ start: start, stop: stop })]),
             position: this._getPositionProperty(),
-            // point: {
-            //     pixelSize: 8,
-            //     color: Cesium.Color.fromRandom({ alpha: 1.0 }),
-            //     // scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1, 8.0e8, 0.5),
-            // },
-            model: {
-                uri: "src/models/ISS_stationary.glb",
-                minimumPixelSize: 100,
-                maximumScale: 10000,
+            point: {
+                pixelSize: 8,
+                color: Cesium.Color.fromRandom({ alpha: 1.0 }),
+                // scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1, 8.0e8, 0.5),
             },
+            // model: {
+            //     uri: SatModel,
+            //     minimumPixelSize: 100,
+            //     maximumScale: 10000,
+            // },
             path: new Cesium.PathGraphics({
                 width: 1,
                 show: false,

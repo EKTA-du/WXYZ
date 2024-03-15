@@ -8,6 +8,19 @@ api.interceptors.request.use(config => {
     return config;
 });
 
+api.interceptors.response.use(
+    res => {
+        return res;
+    },
+    err => {
+        if (err.response.status === 401) {
+            localStorage.removeItem("authToken");
+            window.location.href = "/auth";
+        }
+        return Promise.reject(err);
+    }
+);
+
 async function getSatData(path = "") {
     const res = await api.get(`http://localhost:5174/satdata`);
     if (res.status === 200) {
