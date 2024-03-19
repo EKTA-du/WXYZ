@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 
 app.get('/satdata', authenticateToken, (req, res) => {
   console.log('Fetching TLE data from database');
-  connection.query('SELECT id, NAME, TLE1, TLE2  FROM satdata2 LIMIT 20', (err, results) => {
+  connection.query('SELECT id, NAME, TLE1, TLE2  FROM satdata2 LIMIT 1000', (err, results) => {
     if (err) {
       return res.send(err);
     } else {
@@ -141,3 +141,5 @@ app.post('/login', (req, res) => {
 app.listen(5174, () => {
   console.log('Server is running on port 5174');
 });
+
+export default app;
