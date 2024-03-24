@@ -24,7 +24,7 @@ api.interceptors.response.use(
 async function getSatData(path = "") {
     const res = await api.get(`http://localhost:5174/satdata`);
     if (res.status === 200) {
-        return Promise.resolve(res.data.data);
+        return Promise.resolve(res.data);
     } else {
         return Promise.reject(res.statusText);
     }
@@ -42,6 +42,7 @@ async function getSatelliteTypes() {
 async function getSatDataByID(id) {
     const res = await api.get(`http://localhost:5174/satdata/${id}`);
     if (res.status === 200) {
+        console.log(res.data);
         return Promise.resolve(res.data);
     } else {
         return Promise.reject(res.statusText);

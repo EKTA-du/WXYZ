@@ -185,7 +185,7 @@ function initCesium() {
   viewer.clock.shouldAnimate = true;
   nightLayer.dayAlpha = 0;  
 
-  viewer.resolutionScale = 3;
+  // viewer.resolutionScale = 1;
 
 }
 
@@ -214,28 +214,22 @@ function addCesiumEventListener() {
   ) {
     callback(movement);
     const pickedFeature = viewer.scene.pick(movement.position);
-    if (pickedFeature) {
+    if (pickedFeature && pickedFeature.id && pickedFeature.id.path) {
       const info = await getSatDataByID(pickedFeature.id.id);
       selectedSatellite.value = info[0];
       clickedSatelliteArray.forEach((item) => {
-        item.id ? (item.id.path.show = false) : "";
+        if (item.id && item.id.path) {
+          item.id.path.show = new Cesium.ConstantProperty(false);
+        }
       });
       pickedFeature.id.path.show = new Cesium.ConstantProperty(true);
       pickedFeature.id.label.distanceDisplayCondition = undefined;
       clickedSatelliteArray.push(pickedFeature);
-    }else{
+    } else {
       selectedSatellite.value = null;
     }
   },
   Cesium.ScreenSpaceEventType.LEFT_CLICK);
-}
-
-function clearSatelliteOrbit() {
-  if (clickedSatelliteArray.length) {
-    clickedSatelliteArray.forEach((item) => {
-      item.id ? (item.id.path.show = false) : "";
-    });
-  }
 }
 
 async function getTleData(path) {
