@@ -44,7 +44,6 @@ async function getSatelliteTypes() {
 async function getSatDataByID(id) {
     const res = await api.get(`${SERVER_URL}/satdata/${id}`);
     if (res.status === 200) {
-        console.log(res.data);
         return Promise.resolve(res.data);
     } else {
         return Promise.reject(res.statusText);

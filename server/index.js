@@ -1,44 +1,18 @@
 import express from 'express';
-import mysql from 'mysql2';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
-import SpaceObjectType from './satObject.js';
-import countryObjectType from './countryObject.js';
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
-import satellite from 'satellite.js';
+import authenticateToken from './auth.js';
+import connection from './db.js';
+import ParseTLE from './tle.js';
+import checkCollision from './collision.js';
 
 const app = express();
 
-const JWT_SECRET = process.env.JWT_SECRET;
 
 app.use(cors());
 app.use(express.json());
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
-});
-
-
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (token == null) {
-    return res.sendStatus(401);
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(401);
-    }
-
-    req.user = user;
-    next();
-  });
-}
 
 app.get('/', (req, res) => {
   res.send('Hello World');
@@ -51,9 +25,9 @@ app.get('/satdata', authenticateToken, (req, res) => {
   }
   const User_Id = req.user.id;
   const query = `
-  (SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId LIMIT ?)
+  (SELECT Obj.id, Obj.NAME, Obj.User_Id, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId LIMIT ?)
   UNION ALL
-  (SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.User_Id = ?)
+  (SELECT Obj.id, Obj.NAME, Obj.User_Id, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.User_Id = ?)
 `;
 connection.query(query, [limit, User_Id], (err, results) => {
   if (err) {
@@ -83,7 +57,7 @@ app.get('/getSatByType', (req, res) => {
     limit = 10;
   }
   const satType = req.query.type;
-  connection.query('SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.Type_Id = ? LIMIT ?', [satType, limit], (err, results) => {
+  connection.query('SELECT Obj.id, Obj.NAME, Obj.User_Id, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.Type_Id = ? LIMIT ?', [satType, limit], (err, results) => {
     if (err) {
       res.status(500).json({ error: 'An error occurred while fetching data' });
       return;
@@ -165,73 +139,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-
-function checkCollision(tleData) {
-  return new Promise((resolve, reject) => {
-    const tleDataLine1 = `1 ${tleData.SatelliteNumber} ${tleData.InternationalDesignator} ${tleData.EpochYear}${tleData.EpochDay}  ${tleData.FirstTimeDerivative}  ${tleData.SecondTimeDerivative}  ${tleData.BSTAR} 0 ${tleData.ElementNumber}`;
-    const tleDataLine2 = `2 ${tleData.SatelliteNumber} ${tleData.Inclination} ${tleData.RightAscension} ${tleData.Eccentricity} ${tleData.ArgumentOfPerigee} ${tleData.MeanAnomaly} ${tleData.MeanMotion} ${tleData.RevolutionNumber}`;
-    const satrec = satellite.twoline2satrec(tleDataLine1, tleDataLine2);
-    const now = new Date();
-    const query = 'SELECT * FROM OrbitData';
-    connection.query(query, (error, results) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      for (const orbitData of results) {
-        const {
-          Inclination,
-          RightAscension,
-          Eccentricity,
-          ArgumentOfPerigee,
-          MeanAnomaly,
-          MeanMotion,
-        } = orbitData;
-        const satrecDb = satellite.twoline2satrec(
-          `1 ${orbitData.SatelliteNumber}U ${orbitData.InternationalDesignator} ${orbitData.EpochYear}${orbitData.EpochDay} ${orbitData.FirstTimeDerivative} ${orbitData.SecondTimeDerivative} ${orbitData.BSTAR} 0 ${orbitData.ElementNumber}`,
-          `2 ${orbitData.SatelliteNumber} ${Inclination} ${RightAscension} ${Eccentricity} ${ArgumentOfPerigee} ${MeanAnomaly} ${MeanMotion} ${orbitData.RevolutionNumber}`
-        );
-
-        const positionTle = satellite.propagate(satrec, now).position;
-        const positionDb = satellite.propagate(satrecDb, now).position;
-        if (!positionTle || !positionDb) {
-          continue;
-        }
-        // Calculate the distance between the two satellites
-        const distance = Math.sqrt(
-          Math.pow(positionTle.x - positionDb.x, 2) +
-          Math.pow(positionTle.y - positionDb.y, 2) +
-          Math.pow(positionTle.z - positionDb.z, 2)
-        );
-        // Check if the distance is within a certain threshold (e.g., 100 km)
-        if (distance < 100) {
-          // Collision detected
-          resolve({
-            collision: true,
-            satelliteNumber: orbitData.SatelliteNumber,
-          });
-          return;
-        }
-      }
-      resolve({ collision: false });
-    });
-  });
-}
-
-
-function gmst(date) {
-  const jd = satellite.jday(
-    date.getUTCFullYear(),
-    date.getUTCMonth() + 1,
-    date.getUTCDate(),
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    date.getUTCSeconds()
-  );
-  return satellite.gstime(jd);
-}
-
-
 app.post('/checkCollision', authenticateToken, (req, res) => {
   const tleData = req.body.tleData;
   if (!tleData) {
@@ -242,6 +149,7 @@ app.post('/checkCollision', authenticateToken, (req, res) => {
   try {
     data = ParseTLE(tleData);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ error: 'Invalid TLE data' });
     return;
   }
@@ -250,54 +158,10 @@ app.post('/checkCollision', authenticateToken, (req, res) => {
       res.json(result);
     })
     .catch(error => {
+      console.log(error);
       res.json({ error: 'An error occurred while checking for collision' });
     });
 });
-
-function ParseTLE(tleData) {
-  const lines = tleData.split('\n');
-  const tle1 = lines[0];
-  const tle2 = lines[1];
-
-  const satelliteNumber = tle1.slice(2, 8);
-  const internationalDesignator = tle1.slice(9, 17).trim();
-  const epochYear = tle1.slice(18, 19);
-  const epochDay = tle1.slice(19, 32).trim();
-  const firstTimeDerivative = tle1.slice(34, 43);
-  const secondTimeDerivative = tle1.slice(44, 52);
-  const bstar = tle1.slice(53, 61);
-  const elementNumber = tle1.slice(65, 69);
-  const inclination = tle2.slice(9, 16);
-  const rightAscension = tle2.slice(18, 25);
-  const eccentricity = `${tle2.slice(26, 33)}`;
-  const argumentOfPerigee = tle2.slice(34, 42);
-  const meanAnomaly = tle2.slice(43, 51);
-  const meanMotion = tle2.slice(52, 63);
-  const revolutionNumber = tle2.slice(64, 69);
-
-  // console.log(
-  //   `1 ${satelliteNumber} ${internationalDesignator} ${epochYear}${epochDay}  ${firstTimeDerivative}  ${secondTimeDerivative}  ${bstar} 0 ${elementNumber}\n` +
-  //   `2 ${satelliteNumber} ${inclination} ${rightAscension} ${eccentricity} ${argumentOfPerigee} ${meanAnomaly} ${meanMotion} ${revolutionNumber}`
-  // );
-
-  return {
-    SatelliteNumber: satelliteNumber,
-    InternationalDesignator: internationalDesignator,
-    EpochYear: epochYear,
-    EpochDay: epochDay,
-    FirstTimeDerivative: firstTimeDerivative,
-    SecondTimeDerivative: secondTimeDerivative,
-    BSTAR: bstar,
-    ElementNumber: elementNumber,
-    Inclination: inclination,
-    RightAscension: rightAscension,
-    Eccentricity: eccentricity,
-    ArgumentOfPerigee: argumentOfPerigee,
-    MeanAnomaly: meanAnomaly,
-    MeanMotion: meanMotion,
-    RevolutionNumber: revolutionNumber,
-  };
-}
 
 app.post('/addNewSatellite', authenticateToken, (req, res) => {
   const {
@@ -362,9 +226,9 @@ app.post('/addNewSatellite', authenticateToken, (req, res) => {
 
 app.put('/updateSatellite', authenticateToken, (req, res) => {
   const { id, data } = req.body;
-  console.log(id, data);
   connection.query('UPDATE ObjData SET Name = ?, Payload = ?, Mass = ?, Vmag = ?, LaunchDate = ? WHERE id = ?', [data.name, data.payload, data.mass, data.vmag, data.launchDate, id], (err, results) => {
     if (err) {
+      console.log(err);
       res.status(500).json({ error: 'An error occurred while updating data' });
       return;
     }

@@ -124,7 +124,7 @@
       <el-input v-model="editedSatellite.Vmag"></el-input>
     </el-form-item>
     <el-form-item label="Launch Date">
-      <el-input v-model="editedSatellite.LaunchDate"></el-input>
+      <el-input v-model="editedSatellite.LaunchDate" type="date"></el-input>
     </el-form-item>
     <span slot="footer" class="dialog-footer">
     <el-button @click="editSatDialog = false">Cancel</el-button>
@@ -155,6 +155,8 @@ import {
   addNewSatellite,
   updateSatellite
 } from "@/http/index";
+
+import { debounce } from "lodash";
 
 import SatelliteEntity from "@/js/SatelliteEntity";
 import { ElMessageBox } from "element-plus";
@@ -328,6 +330,7 @@ async function addSatellite(data, noOfSatellites) {
       }
     });
     satelliteMap.set(data, satelliteSet);
+    isLoading.value = false;
   }
 }
 
@@ -451,8 +454,12 @@ onMounted(async () => {
   addSatellite("all", noOfSatellites.value);
 });
 
+const addSatelliteDebounced = debounce((type, value) => {
+  isLoading.value = true;
+  addSatellite(type, value);
+}, 2000);
+
 watch(noOfSatellites, (newValue) => {
-  viewer.entities.removeAll();
-  addSatellite("all", newValue);
+  addSatelliteDebounced('all', newValue);
 });
 </script>

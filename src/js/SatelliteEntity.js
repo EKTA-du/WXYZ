@@ -8,6 +8,7 @@ class SatelliteEntity {
     constructor(tle = "", options = {}) {
         const id = tle.id;
         const name = tle.NAME;
+        this.userOwned = tle.User_Id;
 
         this.id = id;
         this.name = name.trim();
@@ -73,7 +74,7 @@ class SatelliteEntity {
                 material: Cesium.Color.LIME,
             }),
             label: {
-                text: this.name,
+                text: this.userOwned !== null ? this.name + "(User Owned)" : this.name,
                 font: '12px sans-serif',
                 showBackground: true,
                 backgroundColor: new Cesium.Color(0.165, 0.165, 0.165, 0.5),
