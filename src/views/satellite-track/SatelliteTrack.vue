@@ -1,25 +1,11 @@
 <template>
   <div id="cesiumContainer"></div>
   <div class="operate_container">
-    <div
-      class="menu_button"
-      @click="drawer = !drawer"
-      title="Satellite Category selection"
-    >
-      <img
-        src="../../assets/menu.svg"
-        width="28"
-        height="28"
-        alt="Satellite Category selection"
-      />
+    <div class="menu_button" @click="drawer = !drawer" title="Satellite Category selection">
+      <img src="../../assets/menu.svg" width="28" height="28" alt="Satellite Category selection" />
     </div>
     <div class="menu_button" @click="clearSatelliteOrbit" title="clear orbit">
-      <img
-        src="../../assets/hide.svg"
-        width="24"
-        height="24"
-        alt="clear orbit"
-      />
+      <img src="../../assets/hide.svg" width="24" height="24" alt="clear orbit" />
     </div>
     <div class="menu_button" @click="handleLogout" title="Logout">
       <img src="../../assets/logout.svg" width="24" height="24" alt="Logout" />
@@ -27,72 +13,119 @@
     <div class="menu_button" @click="RedirecToGitHub" title="GitHub">
       <img src="../../assets/github.svg" width="24" height="24" alt="Github" />
     </div>
+    <div class="menu_button" @click="uploadDialog = !uploadDialog" title="Add Satellite">
+      <img src="../../assets/upload.svg" width="24" height="24" alt="Add Satellite" />
+    </div>
+
   </div>
   <div v-if="selectedSatellite" id="satDataCard" class="card">
     <div class="card__product-img">
-      <img
-        class="card__img"
-        alt="product-image"
-        src="https://images.news18.com/ibnlive/uploads/2023/01/space-comms-future.jpg"
-      />
+      <img class="card__img" alt="product-image"
+        src="https://images.news18.com/ibnlive/uploads/2023/01/space-comms-future.jpg" />
     </div>
     <div class="card__content">
-      <p class="card__name">{{ selectedSatellite.NAME }}</p>
+      <p class="card__name">{{ selectedSatellite.Name }}</p>
       <p class="card__description">
-        Launch Date: {{ selectedSatellite.launchDate }}
+        <!-- convert to time on day month year : "1961-06-28T18:30:00.000Z to 28 June 1961" -->
+        Launch Date: {{ selectedSatellite.LaunchDate }}
       </p>
-      <p class="card__description">Owner: {{ selectedSatellite.owner }}</p>
+      <p class="card__description">Owner: {{ selectedSatellite.Owner }}</p>
       <p class="card__description">
-        Launch Site: {{ selectedSatellite.launchSite }}
-      </p>
-      <p class="card__description">
-        Launch Vehicle: {{ selectedSatellite.launchVehicle }}
-      </p>
-      <p class="card__description">Type: {{ selectedSatellite.type }}</p>
-      <p class="card__description">RCS: {{ selectedSatellite.rcs }}</p>
-      <p class="card__description">
-        Stable Date: {{ selectedSatellite.stableDate }}
+        Launch Pad: {{ selectedSatellite.LaunchPad }}
       </p>
       <p class="card__description">
-        Alternate Name: {{ selectedSatellite.altName }}
+        Launch Vehicle: {{ selectedSatellite.LaunchVehicle }}
+      </p>
+      <p class="card__description">Type: {{ selectedSatellite.Type }}</p>
+      <p class="card__description">RCS: {{ selectedSatellite.Rcs }}</p>
+      <p class="card__description">
+        Stable Date: {{ selectedSatellite.StableDate }}
       </p>
       <p class="card__description">
-        Launch Pad: {{ selectedSatellite.launchPad }}
+        Alternate Name: {{ selectedSatellite.AltName }}
       </p>
       <p class="card__description">
         Payload:
         {{
-          selectedSatellite.payload !== "0"
-            ? selectedSatellite.payload
-            : "Unknown"
-        }}
+      selectedSatellite.Payload !== "0"
+        ? selectedSatellite.Payload
+        : "Unknown"
+    }}
       </p>
     </div>
     <div class="card__footer">
       <div class="card__price">
-        <span>Country:&nbsp;</span><img :src="selectedSatellite.flag" alt="" />
-        <span>&nbsp{{ selectedSatellite.country }}</span>
+        <span>Country:&nbsp;</span><img :src="selectedSatellite.Flag" alt="" />
+        <span>&nbsp{{ selectedSatellite.CountryName }}</span>
       </div>
       <p class="card__autor">
         Manufacturer:
         {{
-          selectedSatellite.manufacturer !== "0"
-            ? selectedSatellite.manufacturer
-            : "Unknown"
-        }}
+      selectedSatellite.Manufacturer !== "0"
+        ? selectedSatellite.Manufacturer
+        : "Unknown"
+    }}
       </p>
     </div>
+    <el-button type="primary" @click="openSatEditDialog">Edit</el-button>
   </div>
 
   <el-drawer v-model="drawer" title="All Satellites" direction="ltr">
     <el-checkbox-group v-model="checked" class="checkbox-group">
       <template v-for="sat in allSatellite" :key="sat.value">
         <el-checkbox :label="sat.value" :name="sat.value">{{
-          sat.label
-        }}</el-checkbox>
+      sat.label
+    }}</el-checkbox>
       </template>
     </el-checkbox-group>
   </el-drawer>
+
+  <el-dialog title="Add New Satellite" v-model="uploadDialog" width="30%" center>
+    <el-form :model="newSatellite">
+      <el-form-item label="Satellite Name">
+        <el-input v-model="newSatellite.name">TEST</el-input>
+      </el-form-item>
+      <el-form-item label="TLE Data">
+        <el-input type="textarea" v-model="newSatellite.tleData"></el-input>
+        <el-button type="primary" @click="checkForCollisions">Check</el-button>
+        <el-alert
+          title="TLE Data Format"
+          type="info"
+          show-icon
+        ></el-alert>
+      </el-form-item>
+    </el-form>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="dialogVisible = false">Cancel</el-button>
+      <el-button type="primary" @click="addNewSatelliteafterCheck" :disabled="newSatellite.collision == null">Add</el-button>
+    </span>
+  </el-dialog>
+  <el-dialog title="Edit Satellite" v-model="editSatDialog" width="30%" center>
+  <el-form :model="editedSatellite">
+    <el-form-item label="Satellite Name">
+      <el-input v-model="editedSatellite.Name"></el-input>
+    </el-form-item>
+    <el-form-item label="Payload">
+      <el-input v-model="editedSatellite.Payload"></el-input>
+    </el-form-item>
+    <el-form-item label="Mass">
+      <el-input v-model="editedSatellite.Mass"></el-input
+    ></el-form-item>
+    <el-form-item label="Vmag">
+      <el-input v-model="editedSatellite.Vmag"></el-input>
+    </el-form-item>
+    <el-form-item label="Launch Date">
+      <el-input v-model="editedSatellite.LaunchDate"></el-input>
+    </el-form-item>
+    <span slot="footer" class="dialog-footer">
+    <el-button @click="editSatDialog = false">Cancel</el-button>
+    <el-button type="primary" @click="updateSatelliteDone">Save</el-button>
+  </span>
+  </el-form>
+</el-dialog>
+  <loading v-model:active="isLoading"
+                 :can-cancel="true"
+                 :is-full-page="true"/>
 </template>
 
 <script setup>
@@ -102,15 +135,20 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { onMounted, ref, watch } from "vue";
 
 import "./SatelliteTrack.scss";
-
+import Loading from 'vue-loading-overlay';
+    import 'vue-loading-overlay/dist/css/index.css';
 import {
   getSatData,
   getSatelliteTypes,
   getSatDataByID,
   getSatDataByType,
+  checkCollision,
+  addNewSatellite,
+  updateSatellite
 } from "@/http/index";
 
 import SatelliteEntity from "@/js/SatelliteEntity";
+import { ElMessageBox } from "element-plus";
 
 let allSatellite;
 
@@ -125,7 +163,19 @@ const checked = ref([]);
 
 const clickedSatelliteArray = [];
 
+let isLoading = ref(false);
+let editSatDialog = ref(false);
+const editedSatellite = ref({});
+
+
 const selectedSatellite = ref(null);
+var uploadDialog = ref(false);
+const newSatellite = ref({
+  name: "",
+  tleData: "",
+  collision: null,
+  secondSatelliteNumber: null,
+});
 
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
 
@@ -183,9 +233,9 @@ function initCesium() {
   dayLayer.show = true;
   viewer.scene.globe.enableLighting = true;
   viewer.clock.shouldAnimate = true;
-  nightLayer.dayAlpha = 0;  
+  nightLayer.dayAlpha = 0;
 
-  viewer.resolutionScale = 3;
+  // viewer.resolutionScale = 1;
 
 }
 
@@ -214,28 +264,23 @@ function addCesiumEventListener() {
   ) {
     callback(movement);
     const pickedFeature = viewer.scene.pick(movement.position);
-    if (pickedFeature) {
+    if (pickedFeature && pickedFeature.id && pickedFeature.id.path) {
       const info = await getSatDataByID(pickedFeature.id.id);
       selectedSatellite.value = info[0];
+      editedSatellite.value = { ...info[0] };
       clickedSatelliteArray.forEach((item) => {
-        item.id ? (item.id.path.show = false) : "";
+        if (item.id && item.id.path) {
+          item.id.path.show = new Cesium.ConstantProperty(false);
+        }
       });
       pickedFeature.id.path.show = new Cesium.ConstantProperty(true);
       pickedFeature.id.label.distanceDisplayCondition = undefined;
       clickedSatelliteArray.push(pickedFeature);
-    }else{
+    } else {
       selectedSatellite.value = null;
     }
   },
-  Cesium.ScreenSpaceEventType.LEFT_CLICK);
-}
-
-function clearSatelliteOrbit() {
-  if (clickedSatelliteArray.length) {
-    clickedSatelliteArray.forEach((item) => {
-      item.id ? (item.id.path.show = false) : "";
-    });
-  }
+    Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 
 async function getTleData(path) {
@@ -269,6 +314,76 @@ async function addSatellite(data) {
     });
     satelliteMap.set(data, satelliteSet);
   }
+}
+
+function openSatEditDialog() {
+  editSatDialog.value = true;
+}
+
+async function updateSatelliteDone() {
+  isLoading.value = true;
+  const res = await updateSatellite({
+    id: selectedSatellite.value.id,
+    data : {
+      name: editedSatellite.value.Name,
+      payload: editedSatellite.value.Payload,
+      mass: editedSatellite.value.Mass,
+      vmag: editedSatellite.value.Vmag,
+      launchDate: editedSatellite.value.LaunchDate,
+    }
+  });
+  
+  if (res.error) {
+    alert("Error Updating Satellite");
+    isLoading.value = false;
+    return;
+  }
+  alert("Satellite Updated Successfully");
+  isLoading.value = false;
+  editSatDialog.value = false;
+}
+
+function addNewSatelliteafterCheck() {
+  isLoading.value = true;
+  addNewSatellite({
+    name: newSatellite.value.name,
+    tleData: newSatellite.value.tleData,
+    collision: newSatellite.value.collision,
+    secondSatelliteNumber: newSatellite.value.secondSatelliteNumber,
+  });
+  uploadDialog = false;
+  newSatellite.value = {
+    name: "",
+    tleData: "",
+    collision: null,
+  };
+  isLoading.value = false;
+}
+
+async function checkForCollisions() {
+  isLoading.value = true;
+  const res = await checkCollision({
+    name: newSatellite.value.name,
+    tleData: newSatellite.value.tleData,
+  });
+
+  const error = res.error;
+  if(error) {
+    alert('Invalid TLE Data');
+    return;
+  }
+  const collision = res.collision;
+  const satelliteNumber = res.satelliteNumber;
+  if (collision) {
+    newSatellite.value.collision = true;
+    newSatellite.value.secondSatelliteNumber = satelliteNumber;
+    alert(`Collision Detected with Satellite Number: ${satelliteNumber}, you can still add the satellite for testing`);
+  } else {
+    newSatellite.value.collision = false;
+    newSatellite.value.secondSatelliteNumber = null;
+    alert("No Collision Detected");
+  }
+  isLoading.value = false;
 }
 
 function handleLogout() {

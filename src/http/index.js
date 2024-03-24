@@ -2,6 +2,8 @@ import axios from "axios";
 
 const api = axios.create();
 
+const SERVER_URL = import.meta.env.VITE_APP_SERVER_URL;
+
 api.interceptors.request.use(config => {
     const token = localStorage.getItem("authToken");
     config.headers.Authorization = token ? `Bearer ${token}` : "";
@@ -22,16 +24,16 @@ api.interceptors.response.use(
 );
 
 async function getSatData(path = "") {
-    const res = await api.get(`http://localhost:5174/satdata`);
+    const res = await api.get(`${SERVER_URL}/satdata`);
     if (res.status === 200) {
-        return Promise.resolve(res.data.data);
+        return Promise.resolve(res.data);
     } else {
         return Promise.reject(res.statusText);
     }
 }
 
 async function getSatelliteTypes() {
-    const res = await api.get(`http://localhost:5174/types`);
+    const res = await api.get(`${SERVER_URL}/types`);
     if (res.status === 200) {
         return Promise.resolve(res.data);
     } else {
@@ -40,8 +42,9 @@ async function getSatelliteTypes() {
 }
 
 async function getSatDataByID(id) {
-    const res = await api.get(`http://localhost:5174/satdata/${id}`);
+    const res = await api.get(`${SERVER_URL}/satdata/${id}`);
     if (res.status === 200) {
+        console.log(res.data);
         return Promise.resolve(res.data);
     } else {
         return Promise.reject(res.statusText);
@@ -49,7 +52,7 @@ async function getSatDataByID(id) {
 }
 
 async function getCountryFlags(countryName) {
-    return axios.get(`http://localhost:5174/flag/${countryName}`).then(res => {
+    return axios.get(`${SERVER_URL}/flag/${countryName}`).then(res => {
         if (res.status === 200) {
             return Promise.resolve(res.data);
         } else {
@@ -59,7 +62,7 @@ async function getCountryFlags(countryName) {
 }
 
 async function getSatDataByType(type) {
-    return axios.get(`http://localhost:5174/getSatByType?type=${type}`).then(res => {
+    return axios.get(`${SERVER_URL}/getSatByType?type=${type}`).then(res => {
         if (res.status === 200) {
             return Promise.resolve(res.data);
         } else {
@@ -69,7 +72,7 @@ async function getSatDataByType(type) {
 }
 
 async function userSignup(data) {
-    const res = await axios.post(`http://localhost:5174/signup`, data);
+    const res = await axios.post(`${SERVER_URL}/signup`, data);
     if (res.status === 200) {
         return Promise.resolve(res.data);
     } else {
@@ -78,7 +81,7 @@ async function userSignup(data) {
 }
 
 async function userLogin(data) {
-    const res = await axios.post(`http://localhost:5174/login`, data);
+    const res = await axios.post(`${SERVER_URL}/login`, data);
     if (res.status === 200) {
         return Promise.resolve(res.data);
     } else {
@@ -86,5 +89,31 @@ async function userLogin(data) {
     }
 }
 
+async function checkCollision(data) {
+    const res = await api.post(`${SERVER_URL}/checkCollision`, data);
+    if (res.status === 200) {
+        return Promise.resolve(res.data);
+    } else {
+        return Promise.reject(res.statusText);
+    }
+}
 
-export { getSatData, getSatelliteTypes, getSatDataByID, getCountryFlags, getSatDataByType, userSignup, userLogin };
+async function addNewSatellite(data) {
+    const res = await api.post(`${SERVER_URL}/addNewSatellite`, data);
+    if (res.status === 200) {
+        return Promise.resolve(res.data);
+    } else {
+        return Promise.reject(res.statusText);
+    }
+}
+
+async function updateSatellite(data) {
+    const res = await api.put(`${SERVER_URL}/updateSatellite`, data);
+    if (res.status === 200) {
+        return Promise.resolve(res.data);
+    } else {
+        return Promise.reject(res.statusText);
+    }
+}
+
+export { getSatData, getSatelliteTypes, getSatDataByID, getCountryFlags, getSatDataByType, userSignup, userLogin, checkCollision, addNewSatellite, updateSatellite };

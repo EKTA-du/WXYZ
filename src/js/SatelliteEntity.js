@@ -8,14 +8,14 @@ class SatelliteEntity {
     constructor(tle = "", options = {}) {
         const id = tle.id;
         const name = tle.NAME;
-        const tleLine1 = tle.TLE1;
-        const tleLine2 = tle.TLE2;
-        let circle = tleLine2.slice(52, 64);
 
         this.id = id;
         this.name = name.trim();
-        this.tleLine1 = tleLine1.trim();
-        this.tleLine2 = tleLine2.trim();
+        this.tleLine1 = `1 ${tle.SatelliteNumber} ${tle.InternationalDesignator} ${tle.EpochYear}${tle.EpochDay}  ${tle.FirstTimeDerivative}  ${tle.SecondTimeDerivative}  ${tle.BSTAR} 0 ${tle.ElementNumber}`;
+        this.tleLine2 = `2 ${tle.SatelliteNumber} ${tle.Inclination} ${tle.RightAscension} ${tle.Eccentricity} ${tle.ArgumentOfPerigee} ${tle.MeanAnomaly} ${tle.MeanMotion} ${tle.RevolutionNumber}`;
+
+        let circle = this.tleLine2.slice(52, 64);
+
         this.satrec = twoline2satrec(this.tleLine1, this.tleLine2);
 
         this.totalSeconds = 86400;
