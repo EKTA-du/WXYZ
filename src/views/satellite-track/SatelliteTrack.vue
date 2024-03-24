@@ -27,22 +27,28 @@
       <p class="card__name">{{ selectedSatellite.Name }}</p>
       <p class="card__description">
         <!-- convert to time on day month year : "1961-06-28T18:30:00.000Z to 28 June 1961" -->
-        Launch Date: {{ selectedSatellite.LaunchDate }}
+        Launch Date: {{ selectedSatellite.LaunchDate || "N/A" }}
       </p>
-      <p class="card__description">Owner: {{ selectedSatellite.Owner }}</p>
+      <p class="card__description">Owner: {{ selectedSatellite.Owner || "N/A" }}</p>
       <p class="card__description">
-        Launch Pad: {{ selectedSatellite.LaunchPad }}
-      </p>
-      <p class="card__description">
-        Launch Vehicle: {{ selectedSatellite.LaunchVehicle }}
-      </p>
-      <p class="card__description">Type: {{ selectedSatellite.Type }}</p>
-      <p class="card__description">RCS: {{ selectedSatellite.Rcs }}</p>
-      <p class="card__description">
-        Stable Date: {{ selectedSatellite.StableDate }}
+        Mass (kg): {{ selectedSatellite.Mass || "N/A" }}
       </p>
       <p class="card__description">
-        Alternate Name: {{ selectedSatellite.AltName }}
+        Vmag: {{ selectedSatellite.Vmag || "N/A" }}
+      </p>
+      <p class="card__description">
+        Launch Pad: {{ selectedSatellite.LaunchPad || "N/A" }}
+      </p>
+      <p class="card__description">
+        Launch Vehicle: {{ selectedSatellite.LaunchVehicle || "N/A" }}
+      </p>
+      <p class="card__description">Type: {{ selectedSatellite.Type || "N/A" }}</p>
+      <p class="card__description">RCS: {{ selectedSatellite.Rcs || "N/A" }}</p>
+      <p class="card__description">
+        Stable Date: {{ selectedSatellite.StableDate || "N/A" }}
+      </p>
+      <p class="card__description">
+        Alternate Name: {{ selectedSatellite.AltName || "N/A" }}
       </p>
       <p class="card__description">
         Payload:
@@ -56,7 +62,7 @@
     <div class="card__footer">
       <div class="card__price">
         <span>Country:&nbsp;</span><img :src="selectedSatellite.Flag" alt="" />
-        <span>&nbsp{{ selectedSatellite.CountryName }}</span>
+        <span>&nbsp{{ selectedSatellite.CountryName || "Unknown" }}</span>
       </div>
       <p class="card__autor">
         Manufacturer:
@@ -91,8 +97,9 @@
         <el-alert
           title="TLE Data Format"
           type="info"
+          class="tle-info"
           show-icon
-        ></el-alert>
+        ><a href="https://celestrak.org/NORAD/elements/gp.php?GROUP=last-30-days&FORMAT=tle" target="_blank">Click here</a></el-alert>
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
@@ -307,10 +314,15 @@ async function addSatellite(data) {
   } else {
     const result = await getTleData(data);
     result.forEach((tle) => {
-      let satellite = new SatelliteEntity(tle);
-      let cesiumSateEntity = satellite.createSatelliteEntity();
-      let result = viewer.entities.add(cesiumSateEntity);
-      satelliteSet.add(result);
+      try{
+        let satellite = new SatelliteEntity(tle);
+        console.log(satellite.id);
+        let cesiumSateEntity = satellite.createSatelliteEntity();
+        let result = viewer.entities.add(cesiumSateEntity);
+        satelliteSet.add(result);
+      } catch (e) {
+        console.log(e);
+      }
     });
     satelliteMap.set(data, satelliteSet);
   }
@@ -323,13 +335,13 @@ function openSatEditDialog() {
 async function updateSatelliteDone() {
   isLoading.value = true;
   const res = await updateSatellite({
-    id: selectedSatellite.value.id,
+    id: selectedSatellite.value.Id,
     data : {
-      name: editedSatellite.value.Name,
-      payload: editedSatellite.value.Payload,
-      mass: editedSatellite.value.Mass,
-      vmag: editedSatellite.value.Vmag,
-      launchDate: editedSatellite.value.LaunchDate,
+      name: editedSatellite.value.Name || selectedSatellite.value.Name,
+      payload: editedSatellite.value.Payload || selectedSatellite.value.Payload,
+      mass: editedSatellite.value.Mass || selectedSatellite.value.Mass,
+      vmag: editedSatellite.value.Vmag || selectedSatellite.value.Vmag,
+      launchDate: editedSatellite.value.LaunchDate || selectedSatellite.value.LaunchDate,
     }
   });
   
@@ -340,6 +352,10 @@ async function updateSatelliteDone() {
   }
   alert("Satellite Updated Successfully");
   isLoading.value = false;
+  selectedSatellite.value.Name = editedSatellite.value.Name || selectedSatellite.value.Name;
+  selectedSatellite.value.Payload = editedSatellite.value.Payload || selectedSatellite.value.Payload;
+  selectedSatellite.value.Mass = editedSatellite.value.Mass || selectedSatellite.value.Mass;
+  selectedSatellite.value.Vmag = editedSatellite.value.Vmag || selectedSatellite.value.Vmag;
   editSatDialog.value = false;
 }
 

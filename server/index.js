@@ -46,13 +46,20 @@ app.get('/', (req, res) => {
 
 app.get('/satdata', authenticateToken, (req, res) => {
   console.log('Fetching TLE data from database');
-  connection.query('SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId LIMIT 10', (err, results) => {
-    if (err) {
-      res.status(500).json({ error: 'An error occurred while fetching data' });
-      return;
-    }
-    res.json(results);
-  });
+  const User_Id = req.user.id;
+  const query = `
+  (SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId LIMIT 10)
+  UNION ALL
+  (SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.User_Id = ?)
+`;
+connection.query(query, [User_Id], (err, results) => {
+  if (err) {
+    console.log(err);
+    res.status(500).json({ error: 'An error occurred while fetching data' });
+    return;
+  }
+  res.json(results);
+});
 });
 
 app.get('/types', (req, res) => {
@@ -69,7 +76,7 @@ app.get('/types', (req, res) => {
 
 app.get('/getSatByType', (req, res) => {
   const satType = req.query.type;
-  connection.query('SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.Type_Id = ? LIMIT 1000', [satType], (err, results) => {
+  connection.query('SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.Type_Id = ? LIMIT 100', [satType], (err, results) => {
     if (err) {
       res.status(500).json({ error: 'An error occurred while fetching data' });
       return;
@@ -80,8 +87,30 @@ app.get('/getSatByType', (req, res) => {
 
 app.get('/satdata/:id', (req, res) => {
   const id = req.params.id;
-  connection.query('SELECT Obj.*, C.CountryName, C.CountryCode, M.Manufacturer, T.Type, O.Owner, A.AltName, L.LaunchPad, V.LaunchVehicle FROM ObjData Obj INNER JOIN Country C ON Obj.Country_Id = C.Id INNER JOIN Manufacturer M ON Obj.Manufacturer_Id = M.Id INNER JOIN ObjType T ON Obj.Type_Id = T.Id INNER JOIN Owner O ON Obj.Owner_Id = O.Id INNER JOIN AltName A ON Obj.AltName_Id = A.Id INNER JOIN LaunchPad L ON Obj.LaunchPad_Id = L.Id INNER JOIN LaunchVehicle V ON Obj.Vehicle_Id = V.Id WHERE Obj.id = ?', [id], (err, results) => {
-    if (err) {
+  connection.query(`
+  SELECT 
+    Obj.*, 
+    C.CountryName, 
+    C.CountryCode, 
+    M.Manufacturer, 
+    T.Type, 
+    O.Owner, 
+    A.AltName, 
+    L.LaunchPad, 
+    V.LaunchVehicle 
+  FROM 
+    ObjData Obj 
+    LEFT JOIN Country C ON Obj.Country_Id = C.Id 
+    LEFT JOIN Manufacturer M ON Obj.Manufacturer_Id = M.Id 
+    LEFT JOIN ObjType T ON Obj.Type_Id = T.Id 
+    LEFT JOIN Owner O ON Obj.Owner_Id = O.Id 
+    LEFT JOIN AltName A ON Obj.AltName_Id = A.Id 
+    LEFT JOIN LaunchPad L ON Obj.LaunchPad_Id = L.Id 
+    LEFT JOIN LaunchVehicle V ON Obj.Vehicle_Id = V.Id 
+  WHERE 
+    Obj.id = ?
+`, [id], (err, results) => {
+      if (err) {
       res.status(500).json({ error: 'An error occurred while fetching data' });
       return;
     }
@@ -225,19 +254,24 @@ function ParseTLE(tleData) {
 
   const satelliteNumber = tle1.slice(2, 8);
   const internationalDesignator = tle1.slice(9, 17).trim();
-  const epochYear = tle1.slice(17, 19);
+  const epochYear = tle1.slice(18, 19);
   const epochDay = tle1.slice(19, 32).trim();
-  const firstTimeDerivative = tle1.slice(32, 41);
-  const secondTimeDerivative = tle1.slice(42, 49);
-  const bstar = tle1.slice(50, 57);
-  const elementNumber = tle1.slice(60, 65);
-  const inclination = tle2.slice(8, 15);
-  const rightAscension = tle2.slice(16, 24);
-  const eccentricity = tle2.slice(25, 32);
-  const argumentOfPerigee = tle2.slice(33, 41);
-  const meanAnomaly = tle2.slice(42, 50);
-  const meanMotion = tle2.slice(51, 62);
-  const revolutionNumber = tle2.slice(63, 68);
+  const firstTimeDerivative = tle1.slice(34, 43);
+  const secondTimeDerivative = tle1.slice(44, 52);
+  const bstar = tle1.slice(53, 61);
+  const elementNumber = tle1.slice(65, 69);
+  const inclination = tle2.slice(9, 16);
+  const rightAscension = tle2.slice(18, 25);
+  const eccentricity = `${tle2.slice(26, 33)}`;
+  const argumentOfPerigee = tle2.slice(34, 42);
+  const meanAnomaly = tle2.slice(43, 51);
+  const meanMotion = tle2.slice(52, 63);
+  const revolutionNumber = tle2.slice(64, 69);
+
+  // console.log(
+  //   `1 ${satelliteNumber} ${internationalDesignator} ${epochYear}${epochDay}  ${firstTimeDerivative}  ${secondTimeDerivative}  ${bstar} 0 ${elementNumber}\n` +
+  //   `2 ${satelliteNumber} ${inclination} ${rightAscension} ${eccentricity} ${argumentOfPerigee} ${meanAnomaly} ${meanMotion} ${revolutionNumber}`
+  // );
 
   return {
     SatelliteNumber: satelliteNumber,
@@ -321,6 +355,7 @@ app.post('/addNewSatellite', authenticateToken, (req, res) => {
 
 app.put('/updateSatellite', authenticateToken, (req, res) => {
   const { id, data } = req.body;
+  console.log(id, data);
   connection.query('UPDATE ObjData SET Name = ?, Payload = ?, Mass = ?, Vmag = ?, LaunchDate = ? WHERE id = ?', [data.name, data.payload, data.mass, data.vmag, data.launchDate, id], (err, results) => {
     if (err) {
       res.status(500).json({ error: 'An error occurred while updating data' });
