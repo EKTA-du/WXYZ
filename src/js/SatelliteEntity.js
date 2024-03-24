@@ -1,5 +1,6 @@
 import { twoline2satrec, propagate } from "satellite.js";
 import * as Cesium from "cesium";
+
 const SatModel = new URL('@/assets/models/ISS_stationary.glb', import.meta.url).href;
 
 class SatelliteEntity {
@@ -7,15 +8,15 @@ class SatelliteEntity {
     constructor(tle = "", options = {}) {
         const id = tle.id;
         const name = tle.NAME;
-        const tleLine1 = `1 ${tle.SatelliteNumber} ${tle.InternationalDesignator} ${tle.EpochYear}${tle.EpochDay}  ${tle.FirstTimeDerivative}  ${tle.SecondTimeDerivative}  ${tle.BSTAR} 0 ${tle.ElementNumber}`;
-        const tleLine2 = `2 ${tle.SatelliteNumber} ${tle.Inclination} ${tle.RightAscension} ${tle.Eccentricity} ${tle.ArgumentOfPerigee} ${tle.MeanAnomaly} ${tle.MeanMotion} ${tle.RevolutionNumber}`;
 
         this.id = id;
         this.name = name.trim();
-        this.tleLine1 = "1 58998U 24036A   24083.54243187  .00020300  00000+0  74334-3 0  9993";
-        this.tleLine2 = "2 58998  53.1616 163.4567 0001500  78.9719 281.1449 15.28029318  5702";
+        this.tleLine1 = `1 ${tle.SatelliteNumber} ${tle.InternationalDesignator} ${tle.EpochYear}${tle.EpochDay}  ${tle.FirstTimeDerivative}  ${tle.SecondTimeDerivative}  ${tle.BSTAR} 0 ${tle.ElementNumber}`;
+        this.tleLine2 = `2 ${tle.SatelliteNumber} ${tle.Inclination} ${tle.RightAscension} ${tle.Eccentricity} ${tle.ArgumentOfPerigee} ${tle.MeanAnomaly} ${tle.MeanMotion} ${tle.RevolutionNumber}`;
+
+        let circle = this.tleLine2.slice(52, 64);
+
         this.satrec = twoline2satrec(this.tleLine1, this.tleLine2);
-        const circle = tleLine2.split(52, 64);
 
         this.totalSeconds = 86400;
         this.stepSeconds = 100;
@@ -56,7 +57,7 @@ class SatelliteEntity {
             point: {
                 pixelSize: 8,
                 color: Cesium.Color.fromRandom({ alpha: 1.0 }),
-                scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1, 8.0e8, 0.5),
+                // scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1, 8.0e8, 0.5),
             },
             // model: {
             //     uri: SatModel,

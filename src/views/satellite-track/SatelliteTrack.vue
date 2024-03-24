@@ -37,47 +37,45 @@
       />
     </div>
     <div class="card__content">
-      <p class="card__name">{{ selectedSatellite.NAME }}</p>
+      <p class="card__name">{{ selectedSatellite.Name }}</p>
       <p class="card__description">
-        Launch Date: {{ selectedSatellite.launchDate }}
+        <!-- convert to time on day month year : "1961-06-28T18:30:00.000Z to 28 June 1961" -->
+        Launch Date: {{ selectedSatellite.LaunchDate }}
       </p>
-      <p class="card__description">Owner: {{ selectedSatellite.owner }}</p>
+      <p class="card__description">Owner: {{ selectedSatellite.Owner }}</p>
       <p class="card__description">
-        Launch Site: {{ selectedSatellite.launchSite }}
-      </p>
-      <p class="card__description">
-        Launch Vehicle: {{ selectedSatellite.launchVehicle }}
-      </p>
-      <p class="card__description">Type: {{ selectedSatellite.type }}</p>
-      <p class="card__description">RCS: {{ selectedSatellite.rcs }}</p>
-      <p class="card__description">
-        Stable Date: {{ selectedSatellite.stableDate }}
+        Launch Pad: {{ selectedSatellite.LaunchPad }}
       </p>
       <p class="card__description">
-        Alternate Name: {{ selectedSatellite.altName }}
+        Launch Vehicle: {{ selectedSatellite.LaunchVehicle }}
+      </p>
+      <p class="card__description">Type: {{ selectedSatellite.Type }}</p>
+      <p class="card__description">RCS: {{ selectedSatellite.Rcs }}</p>
+      <p class="card__description">
+        Stable Date: {{ selectedSatellite.StableDate }}
       </p>
       <p class="card__description">
-        Launch Pad: {{ selectedSatellite.launchPad }}
+        Alternate Name: {{ selectedSatellite.AltName }}
       </p>
       <p class="card__description">
         Payload:
         {{
-          selectedSatellite.payload !== "0"
-            ? selectedSatellite.payload
+          selectedSatellite.Payload !== "0"
+            ? selectedSatellite.Payload
             : "Unknown"
         }}
       </p>
     </div>
     <div class="card__footer">
       <div class="card__price">
-        <span>Country:&nbsp;</span><img :src="selectedSatellite.flag" alt="" />
-        <span>&nbsp{{ selectedSatellite.country }}</span>
+        <span>Country:&nbsp;</span><img :src="selectedSatellite.Flag" alt="" />
+        <span>&nbsp{{ selectedSatellite.CountryName }}</span>
       </div>
       <p class="card__autor">
         Manufacturer:
         {{
-          selectedSatellite.manufacturer !== "0"
-            ? selectedSatellite.manufacturer
+          selectedSatellite.Manufacturer !== "0"
+            ? selectedSatellite.Manufacturer
             : "Unknown"
         }}
       </p>

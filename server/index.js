@@ -180,7 +180,7 @@ app.get('/', (req, res) => {
 
 app.get('/satdata', authenticateToken, (req, res) => {
   console.log('Fetching TLE data from database');
-  connection.query('SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId LIMIT 1', (err, results) => {
+  connection.query('SELECT Obj.id, Obj.NAME, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId LIMIT 100', (err, results) => {
     if (err) {
       res.status(500).json({ error: 'An error occurred while fetching data' });
       return;
@@ -218,7 +218,7 @@ app.get('/getSatByType', (req, res) => {
 
 app.get('/satdata/:id', (req, res) => {
   const id = req.params.id;
-  connection.query('SELECT Obj.*  FROM ObjData Obj WHERE Obj.Id = ?', [id], (err, results) => {
+  connection.query('SELECT Obj.*, C.CountryName, M.Manufacturer, T.Type, O.Owner, A.AltName, L.LaunchPad, V.LaunchVehicle FROM ObjData Obj INNER JOIN Country C ON Obj.Country_Id = C.Id INNER JOIN Manufacturer M ON Obj.Manufacturer_Id = M.Id INNER JOIN ObjType T ON Obj.Type_Id = T.Id INNER JOIN Owner O ON Obj.Owner_Id = O.Id INNER JOIN AltName A ON Obj.AltName_Id = A.Id INNER JOIN LaunchPad L ON Obj.LaunchPad_Id = L.Id INNER JOIN LaunchVehicle V ON Obj.Vehicle_Id = V.Id WHERE Obj.id = ?', [id], (err, results) => {
     if (err) {
       res.status(500).json({ error: 'An error occurred while fetching data' });
       return;
