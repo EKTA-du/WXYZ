@@ -17,7 +17,6 @@ class SatelliteEntity {
         let circle = this.tleLine2.slice(52, 64);
 
         this.satrec = twoline2satrec(this.tleLine1, this.tleLine2);
-
         this.totalSeconds = 86400;
         this.stepSeconds = 100;
         this.leadTime = parseInt(24 * 3600 / circle);
@@ -57,13 +56,15 @@ class SatelliteEntity {
             point: {
                 pixelSize: 8,
                 color: Cesium.Color.fromRandom({ alpha: 1.0 }),
+                show: true,
                 // scaleByDistance: new Cesium.NearFarScalar(1.5e3, 1, 8.0e8, 0.5),
             },
-            // model: {
-            //     uri: SatModel,
-            //     minimumPixelSize: 100,
-            //     maximumScale: 10000,
-            // },
+            model: {
+                uri: SatModel,
+                minimumPixelSize: 100,
+                show: false,
+                maximumScale: 10000,
+            },
             path: new Cesium.PathGraphics({
                 width: 1,
                 show: false,

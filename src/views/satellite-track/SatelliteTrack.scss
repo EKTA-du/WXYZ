@@ -1,3 +1,13 @@
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 #cesiumContainer {
   height: 100%;
 }
@@ -245,4 +255,19 @@ textarea {
 .fade-leave-to,
 .fade-enter-from {
   opacity: 0;
+}
+
+.no-of-satellites {
+  width: 300px !important;
+  border-radius: 5px !important;
+}
+.no-of-satellites > input[type=number] {
+  border-radius: 5px !important;
+    align-self: center;
+    text-align: center;
+    width: 50px !important;
+    color: white;
+    height: 25px;
+    border: none;
+    background: none !important;
 }

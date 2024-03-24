@@ -23,8 +23,8 @@ api.interceptors.response.use(
     }
 );
 
-async function getSatData(path = "") {
-    const res = await api.get(`${SERVER_URL}/satdata`);
+async function getSatData(noOfSatellites) {
+    const res = await api.get(`${SERVER_URL}/satdata?limit=${noOfSatellites}`);
     if (res.status === 200) {
         return Promise.resolve(res.data);
     } else {
@@ -61,8 +61,8 @@ async function getCountryFlags(countryName) {
     });
 }
 
-async function getSatDataByType(type) {
-    return axios.get(`${SERVER_URL}/getSatByType?type=${type}`).then(res => {
+async function getSatDataByType(type, noOfSatellites) {
+    return axios.get(`${SERVER_URL}/getSatByType?type=${type}&limit=${noOfSatellites}`).then(res => {
         if (res.status === 200) {
             return Promise.resolve(res.data);
         } else {

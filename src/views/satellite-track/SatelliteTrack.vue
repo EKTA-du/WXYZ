@@ -16,7 +16,9 @@
     <div class="menu_button" @click="uploadDialog = !uploadDialog" title="Add Satellite">
       <img src="../../assets/upload.svg" width="24" height="24" alt="Add Satellite" />
     </div>
-
+    <div class="menu_button no-of-satellites" title="No of Satellites" >
+      Number of Satellites to Render: <input type="number" v-model="noOfSatellites"  width="24" height="24" alt="No of Satellites" />
+    </div>
   </div>
   <div v-if="selectedSatellite" id="satDataCard" class="card">
     <div class="card__product-img">
@@ -165,6 +167,7 @@ let viewer;
 const totalSeconds = 86400;
 const satelliteMap = new Map();
 const drawer = ref(false);
+const noOfSatellites = ref(25);
 
 const checked = ref([]);
 
@@ -173,7 +176,6 @@ const clickedSatelliteArray = [];
 let isLoading = ref(false);
 let editSatDialog = ref(false);
 const editedSatellite = ref({});
-
 
 const selectedSatellite = ref(null);
 var uploadDialog = ref(false);
@@ -278,9 +280,11 @@ function addCesiumEventListener() {
       clickedSatelliteArray.forEach((item) => {
         if (item.id && item.id.path) {
           item.id.path.show = new Cesium.ConstantProperty(false);
+          item.id.model.show = new Cesium.ConstantProperty(false);
         }
       });
       pickedFeature.id.path.show = new Cesium.ConstantProperty(true);
+      pickedFeature.id.model.show = new Cesium.ConstantProperty(true);
       pickedFeature.id.label.distanceDisplayCondition = undefined;
       clickedSatelliteArray.push(pickedFeature);
     } else {
@@ -290,19 +294,19 @@ function addCesiumEventListener() {
     Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 
-async function getTleData(path) {
-  if (!path || path == "all") return await getSatData();
-  return await getSatDataByType(path);
+async function getTleData(path, noOfSatellites) {
+  if (!path || path == "all") return await getSatData(noOfSatellites);
+  return await getSatDataByType(path, noOfSatellites);
 }
 
-async function addSatellite(data) {
+async function addSatellite(data, noOfSatellites) {
   let satelliteSet = new Set();
   satelliteMap.forEach((satelliteSet) =>
     satelliteSet.forEach((sate) => viewer.entities.remove(sate))
   );
   if (data != "all" && data.length > 1) {
     data.forEach(async (path) => {
-      const result = await getTleData(path);
+      const result = await getTleData(path, noOfSatellites);
       result.forEach((tle) => {
         let satellite = new SatelliteEntity(tle);
         let cesiumSateEntity = satellite.createSatelliteEntity();
@@ -312,11 +316,10 @@ async function addSatellite(data) {
       satelliteMap.set(path, satelliteSet);
     });
   } else {
-    const result = await getTleData(data);
+    const result = await getTleData(data, noOfSatellites);
     result.forEach((tle) => {
       try{
         let satellite = new SatelliteEntity(tle);
-        console.log(satellite.id);
         let cesiumSateEntity = satellite.createSatelliteEntity();
         let result = viewer.entities.add(cesiumSateEntity);
         satelliteSet.add(result);
@@ -357,6 +360,18 @@ async function updateSatelliteDone() {
   selectedSatellite.value.Mass = editedSatellite.value.Mass || selectedSatellite.value.Mass;
   selectedSatellite.value.Vmag = editedSatellite.value.Vmag || selectedSatellite.value.Vmag;
   editSatDialog.value = false;
+}
+
+function clearSatelliteOrbit() {
+  clickedSatelliteArray.forEach((item) => {
+    if (item.id && item.id.path) {
+      item.id.path.show = new Cesium.ConstantProperty(false);
+      // item.id.model.show = new Cesium.ConstantProperty(false);
+      // item.id.point.show = new Cesium.ConstantProperty(true);
+    }
+  });
+  clickedSatelliteArray.length = 0;
+  selectedSatellite.value = null;
 }
 
 function addNewSatelliteafterCheck() {
@@ -433,6 +448,11 @@ onMounted(async () => {
   initTimeLine();
   addCesiumEventListener();
   allSatellite = await getSatelliteTypes();
-  addSatellite("all");
+  addSatellite("all", noOfSatellites.value);
+});
+
+watch(noOfSatellites, (newValue) => {
+  viewer.entities.removeAll();
+  addSatellite("all", newValue);
 });
 </script>
