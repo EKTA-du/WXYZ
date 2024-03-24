@@ -13,7 +13,7 @@
     <div class="menu_button" @click="RedirecToGitHub" title="GitHub">
       <img src="../../assets/github.svg" width="24" height="24" alt="Github" />
     </div>
-    <div class="menu_button" @click="addNewSatellite" title="AddSatellite">
+    <div class="menu_button" @click="uploadDialog = !uploadDialog" title="Add Satellite">
       <img src="../../assets/upload.svg" width="24" height="24" alt="Add Satellite" />
     </div>
 
@@ -67,6 +67,7 @@
     }}
       </p>
     </div>
+    <el-button type="primary" @click="openSatEditDialog">Edit</el-button>
   </div>
 
   <el-drawer v-model="drawer" title="All Satellites" direction="ltr">
@@ -79,22 +80,52 @@
     </el-checkbox-group>
   </el-drawer>
 
-  <el-dialog title="Add New Satellite" :visible.sync="dialogVisible">
+  <el-dialog title="Add New Satellite" v-model="uploadDialog" width="30%" center>
     <el-form :model="newSatellite">
       <el-form-item label="Satellite Name">
-        HII
-        <!-- <el-input v-model="newSatellite.name">TEST</el-input> -->
+        <el-input v-model="newSatellite.name">TEST</el-input>
       </el-form-item>
       <el-form-item label="TLE Data">
-        HELLo
-        <!-- <el-input type="textarea" v-model="newSatellite.tleData">TEST</el-input> -->
+        <el-input type="textarea" v-model="newSatellite.tleData"></el-input>
+        <el-button type="primary" @click="checkForCollisions">Check</el-button>
+        <el-alert
+          title="TLE Data Format"
+          type="info"
+          show-icon
+        ></el-alert>
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
       <el-button @click="dialogVisible = false">Cancel</el-button>
-      <el-button type="primary" @click="submitNewSatellite">Confirm</el-button>
+      <el-button type="primary" @click="addNewSatelliteafterCheck" :disabled="newSatellite.collision == null">Add</el-button>
     </span>
   </el-dialog>
+  <el-dialog title="Edit Satellite" v-model="editSatDialog" width="30%" center>
+  <el-form :model="editedSatellite">
+    <el-form-item label="Satellite Name">
+      <el-input v-model="editedSatellite.Name"></el-input>
+    </el-form-item>
+    <el-form-item label="Payload">
+      <el-input v-model="editedSatellite.Payload"></el-input>
+    </el-form-item>
+    <el-form-item label="Mass">
+      <el-input v-model="editedSatellite.Mass"></el-input
+    ></el-form-item>
+    <el-form-item label="Vmag">
+      <el-input v-model="editedSatellite.Vmag"></el-input>
+    </el-form-item>
+    <el-form-item label="Launch Date">
+      <el-input v-model="editedSatellite.LaunchDate"></el-input>
+    </el-form-item>
+    <span slot="footer" class="dialog-footer">
+    <el-button @click="editSatDialog = false">Cancel</el-button>
+    <el-button type="primary" @click="updateSatelliteDone">Save</el-button>
+  </span>
+  </el-form>
+</el-dialog>
+  <loading v-model:active="isLoading"
+                 :can-cancel="true"
+                 :is-full-page="true"/>
 </template>
 
 <script setup>
@@ -104,12 +135,16 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { onMounted, ref, watch } from "vue";
 
 import "./SatelliteTrack.scss";
-
+import Loading from 'vue-loading-overlay';
+    import 'vue-loading-overlay/dist/css/index.css';
 import {
   getSatData,
   getSatelliteTypes,
   getSatDataByID,
   getSatDataByType,
+  checkCollision,
+  addNewSatellite,
+  updateSatellite
 } from "@/http/index";
 
 import SatelliteEntity from "@/js/SatelliteEntity";
@@ -128,11 +163,18 @@ const checked = ref([]);
 
 const clickedSatelliteArray = [];
 
+let isLoading = ref(false);
+let editSatDialog = ref(false);
+const editedSatellite = ref({});
+
+
 const selectedSatellite = ref(null);
-var dialogVisible = ref(true);
+var uploadDialog = ref(false);
 const newSatellite = ref({
   name: "",
   tleData: "",
+  collision: null,
+  secondSatelliteNumber: null,
 });
 
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
@@ -225,6 +267,7 @@ function addCesiumEventListener() {
     if (pickedFeature && pickedFeature.id && pickedFeature.id.path) {
       const info = await getSatDataByID(pickedFeature.id.id);
       selectedSatellite.value = info[0];
+      editedSatellite.value = { ...info[0] };
       clickedSatelliteArray.forEach((item) => {
         if (item.id && item.id.path) {
           item.id.path.show = new Cesium.ConstantProperty(false);
@@ -273,17 +316,76 @@ async function addSatellite(data) {
   }
 }
 
-function addNewSatellite() {
-  console.log("add new satellite");
-    dialogVisible.value = true;
-  }
+function openSatEditDialog() {
+  editSatDialog.value = true;
+}
 
-  function submitNewSatellite() {
-    // Here you can handle the submission of the new satellite data
-    // For example, you can call an API to store the new satellite data
-    console.log(newSatellite.value);
-    dialogVisible.value = false;
+async function updateSatelliteDone() {
+  isLoading.value = true;
+  const res = await updateSatellite({
+    id: selectedSatellite.value.id,
+    data : {
+      name: editedSatellite.value.Name,
+      payload: editedSatellite.value.Payload,
+      mass: editedSatellite.value.Mass,
+      vmag: editedSatellite.value.Vmag,
+      launchDate: editedSatellite.value.LaunchDate,
+    }
+  });
+  
+  if (res.error) {
+    alert("Error Updating Satellite");
+    isLoading.value = false;
+    return;
   }
+  alert("Satellite Updated Successfully");
+  isLoading.value = false;
+  editSatDialog.value = false;
+}
+
+function addNewSatelliteafterCheck() {
+  isLoading.value = true;
+  addNewSatellite({
+    name: newSatellite.value.name,
+    tleData: newSatellite.value.tleData,
+    collision: newSatellite.value.collision,
+    secondSatelliteNumber: newSatellite.value.secondSatelliteNumber,
+  });
+  uploadDialog = false;
+  newSatellite.value = {
+    name: "",
+    tleData: "",
+    collision: null,
+  };
+  isLoading.value = false;
+}
+
+async function checkForCollisions() {
+  isLoading.value = true;
+  const res = await checkCollision({
+    name: newSatellite.value.name,
+    tleData: newSatellite.value.tleData,
+  });
+
+  const error = res.error;
+  if(error) {
+    alert('Invalid TLE Data');
+    return;
+  }
+  const collision = res.collision;
+  const satelliteNumber = res.satelliteNumber;
+  if (collision) {
+    newSatellite.value.collision = true;
+    newSatellite.value.secondSatelliteNumber = satelliteNumber;
+    alert(`Collision Detected with Satellite Number: ${satelliteNumber}, you can still add the satellite for testing`);
+  } else {
+    newSatellite.value.collision = false;
+    newSatellite.value.secondSatelliteNumber = null;
+    alert("No Collision Detected");
+  }
+  isLoading.value = false;
+}
+
 function handleLogout() {
   ElMessageBox.confirm("Are you sure you want to log out?", "hint", {
     confirmButtonText: "Sure",

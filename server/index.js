@@ -6,7 +6,7 @@ import SpaceObjectType from './satObject.js';
 import countryObjectType from './countryObject.js';
 import dotenv from 'dotenv';
 dotenv.config({ path: './.env' });
-
+import satellite from 'satellite.js';
 
 const app = express();
 
@@ -43,140 +43,6 @@ function authenticateToken(req, res, next) {
 app.get('/', (req, res) => {
   res.send('Hello World');
 });
-
-// CREATE TABLE `AltName` (
-//   `Id` int NOT NULL AUTO_INCREMENT,
-//   `AltName` text,
-//   PRIMARY KEY (`Id`)
-// );
-
-// CREATE TABLE `Country` (
-//   `Id` int NOT NULL AUTO_INCREMENT,
-//   `CountryName` text,
-//   PRIMARY KEY (`Id`)
-// );
-
-// CREATE TABLE `LaunchPad` (
-//   `Id` varchar(4) NOT NULL DEFAULT 'p02',
-//   `LaunchPad` text,
-//   PRIMARY KEY (`Id`)
-// );
-
-// CREATE TABLE `LaunchVehicle` (
-//   `Id` varchar(5) NOT NULL DEFAULT 'v283',
-//   `LaunchVehicle` text,
-//   PRIMARY KEY (`Id`)
-// );
-
-// CREATE TABLE `Manufacturer` (
-//   `Id` varchar(4) NOT NULL DEFAULT 'm0',
-//   `Manufacturer` text,
-//   PRIMARY KEY (`Id`)
-// );
-
-// CREATE TABLE `ObjType` (
-//   `Id` int NOT NULL AUTO_INCREMENT,
-//   `Type` varchar(100) DEFAULT NULL,
-//   PRIMARY KEY (`Id`)
-// );
-
-// CREATE TABLE `Owner` (
-//   `Id` int NOT NULL AUTO_INCREMENT,
-//   `Owner` text,
-//   PRIMARY KEY (`Id`)
-// );
-
-// CREATE TABLE `User` (
-//   `Id` int NOT NULL AUTO_INCREMENT,
-//   `name` varchar(255) NOT NULL,
-//   `Email` varchar(255) NOT NULL,
-//   `password` varchar(255) NOT NULL,
-//   PRIMARY KEY (`Id`),
-//   UNIQUE KEY `email` (`Email`)
-// );
-
-
-// CREATE TABLE `ObjData` (
-//   `Id` int NOT NULL,
-//   `Name` varchar(100) DEFAULT NULL,
-//   `Payload` varchar(100) DEFAULT NULL,
-//   `Mass` int DEFAULT NULL,
-//   `Vmag` double DEFAULT NULL,
-//   `LaunchDate` date DEFAULT NULL,
-//   `Owner_Id` int DEFAULT NULL,
-//   `Country_Id` int DEFAULT NULL,
-//   `Manufacturer_Id` varchar(45) DEFAULT NULL,
-//   `Bus` varchar(100) DEFAULT NULL,
-//   `LaunchMass` int DEFAULT NULL,
-//   `DryMass` int DEFAULT NULL,
-//   `Length` float DEFAULT NULL,
-//   `Diameter` float DEFAULT NULL,
-//   `Span` float DEFAULT NULL,
-//   `Shape` varchar(100) DEFAULT NULL,
-//   `Vehicle_Id` varchar(45) DEFAULT NULL,
-//   `Type_Id` int DEFAULT NULL,
-//   `Rcs` double DEFAULT NULL,
-//   `StableDate` date DEFAULT NULL,
-//   `AltName_Id` int DEFAULT NULL,
-//   `LaunchPad_Id` varchar(45) DEFAULT NULL,
-//   `User_Id` int DEFAULT NULL,
-//   PRIMARY KEY (`Id`),
-//   KEY `id` (`Id`),
-//   KEY `Country_FK_idx` (`Country_Id`),
-//   KEY `AltName_FK_idx` (`AltName_Id`),
-//   KEY `LaunchPad_FK_idx` (`LaunchPad_Id`),
-//   KEY `LaunchVehicle_FK_idx` (`Vehicle_Id`),
-//   KEY `Manufacturer_FK_idx` (`Manufacturer_Id`),
-//   KEY `Owner_FK_idx` (`Owner_Id`),
-//   KEY `Type_FK_idx` (`Type_Id`),
-//   KEY `User_FK_idx` (`User_Id`),
-//   CONSTRAINT `AltName_FK` FOREIGN KEY (`AltName_Id`) REFERENCES `AltName` (`Id`),
-//   CONSTRAINT `Country_FK` FOREIGN KEY (`Country_Id`) REFERENCES `Country` (`Id`),
-//   CONSTRAINT `LaunchPad_FK` FOREIGN KEY (`LaunchPad_Id`) REFERENCES `LaunchPad` (`Id`),
-//   CONSTRAINT `LaunchVehicle_FK` FOREIGN KEY (`Vehicle_Id`) REFERENCES `LaunchVehicle` (`Id`),
-//   CONSTRAINT `Manufacturer_FK` FOREIGN KEY (`Manufacturer_Id`) REFERENCES `Manufacturer` (`Id`),
-//   CONSTRAINT `Owner_FK` FOREIGN KEY (`Owner_Id`) REFERENCES `Owner` (`Id`),
-//   CONSTRAINT `Type_FK` FOREIGN KEY (`Type_Id`) REFERENCES `ObjType` (`Id`),
-//   CONSTRAINT `User_FK` FOREIGN KEY (`User_Id`) REFERENCES `User` (`Id`)
-// );
-
-// CREATE TABLE `OrbitData` (
-//   `ObjectId` int NOT NULL,
-//   `SatelliteNumber` varchar(50) DEFAULT NULL,
-//   `InternationalDesignator` text,
-//   `EpochYear` int DEFAULT NULL,
-//   `EpochDay` double DEFAULT NULL,
-//   `FirstTimeDerivative` double DEFAULT NULL,
-//   `SecondTimeDerivative` text,
-//   `BSTAR` text,
-//   `ElementNumber` int DEFAULT NULL,
-//   `Inclination` double DEFAULT NULL,
-//   `RightAscension` double DEFAULT NULL,
-//   `Eccentricity` int DEFAULT NULL,
-//   `ArgumentOfPerigee` double DEFAULT NULL,
-//   `MeanAnomaly` double DEFAULT NULL,
-//   `MeanMotion` double DEFAULT NULL,
-//   `RevolutionNumber` int DEFAULT NULL,
-//   PRIMARY KEY (`ObjectId`),
-//   CONSTRAINT `OBJDATA_FK` FOREIGN KEY (`ObjectId`) REFERENCES `ObjData` (`Id`)
-// );
-
-// CREATE TABLE `Collisions` (
-//   `ID` int NOT NULL,
-//   `User_ID` int DEFAULT NULL,
-//   `Object1` int DEFAULT NULL,
-//   `Object2` int DEFAULT NULL,
-//   `CollisionTime` datetime DEFAULT NULL,
-//   PRIMARY KEY (`ID`),
-//   KEY `User_FK_idx` (`User_ID`),
-//   KEY `Collision_FK1` (`Object1`),
-//   KEY `Collision_FK2` (`Object2`),
-//   CONSTRAINT `Collision_FK1` FOREIGN KEY (`Object1`) REFERENCES `ObjData` (`Id`),
-//   CONSTRAINT `Collision_FK2` FOREIGN KEY (`Object2`) REFERENCES `ObjData` (`Id`),
-//   CONSTRAINT `User_Collision_FK` FOREIGN KEY (`User_ID`) REFERENCES `User` (`Id`)
-// );
-
-
 
 app.get('/satdata', authenticateToken, (req, res) => {
   console.log('Fetching TLE data from database');
@@ -249,18 +115,222 @@ app.post('/signup', (req, res) => {
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   connection.query('SELECT * FROM User WHERE email = ? AND password = ?', [email, password], (err, results) => {
+    console.log(results);
     if (err) {
       res.status(500).json({ error: 'An error occurred while logging in' });
       return;
     }
     if (results.length > 0) {
-      const token = jwt.sign({ id: results[0].id }, JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign({ id: results[0].Id }, JWT_SECRET, { expiresIn: '1h' });
       res.status(200).json({ message: 'User logged in successfully', token: token });
     } else {
       res.status(401).json({ error: 'Invalid email or password' });
     }
   });
 });
+
+
+function checkCollision(tleData) {
+  return new Promise((resolve, reject) => {
+    const tleDataLine1 = `1 ${tleData.SatelliteNumber} ${tleData.InternationalDesignator} ${tleData.EpochYear}${tleData.EpochDay}  ${tleData.FirstTimeDerivative}  ${tleData.SecondTimeDerivative}  ${tleData.BSTAR} 0 ${tleData.ElementNumber}`;
+    const tleDataLine2 = `2 ${tleData.SatelliteNumber} ${tleData.Inclination} ${tleData.RightAscension} ${tleData.Eccentricity} ${tleData.ArgumentOfPerigee} ${tleData.MeanAnomaly} ${tleData.MeanMotion} ${tleData.RevolutionNumber}`;
+    const satrec = satellite.twoline2satrec(tleDataLine1, tleDataLine2);
+    const now = new Date();
+    const query = 'SELECT * FROM OrbitData';
+    connection.query(query, (error, results) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      for (const orbitData of results) {
+        const {
+          Inclination,
+          RightAscension,
+          Eccentricity,
+          ArgumentOfPerigee,
+          MeanAnomaly,
+          MeanMotion,
+        } = orbitData;
+        const satrecDb = satellite.twoline2satrec(
+          `1 ${orbitData.SatelliteNumber}U ${orbitData.InternationalDesignator} ${orbitData.EpochYear}${orbitData.EpochDay} ${orbitData.FirstTimeDerivative} ${orbitData.SecondTimeDerivative} ${orbitData.BSTAR} 0 ${orbitData.ElementNumber}`,
+          `2 ${orbitData.SatelliteNumber} ${Inclination} ${RightAscension} ${Eccentricity} ${ArgumentOfPerigee} ${MeanAnomaly} ${MeanMotion} ${orbitData.RevolutionNumber}`
+        );
+
+        const positionTle = satellite.propagate(satrec, now).position;
+        const positionDb = satellite.propagate(satrecDb, now).position;
+        if (!positionTle || !positionDb) {
+          continue;
+        }
+        // Calculate the distance between the two satellites
+        const distance = Math.sqrt(
+          Math.pow(positionTle.x - positionDb.x, 2) +
+          Math.pow(positionTle.y - positionDb.y, 2) +
+          Math.pow(positionTle.z - positionDb.z, 2)
+        );
+        // Check if the distance is within a certain threshold (e.g., 100 km)
+        if (distance < 100) {
+          // Collision detected
+          resolve({
+            collision: true,
+            satelliteNumber: orbitData.SatelliteNumber,
+          });
+          return;
+        }
+      }
+      resolve({ collision: false });
+    });
+  });
+}
+
+
+function gmst(date) {
+  const jd = satellite.jday(
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds()
+  );
+  return satellite.gstime(jd);
+}
+
+
+app.post('/checkCollision', authenticateToken, (req, res) => {
+  const tleData = req.body.tleData;
+  if (!tleData) {
+    res.status(400).json({ error: 'Missing TLE data' });
+    return;
+  }
+  let data;
+  try {
+    data = ParseTLE(tleData);
+  } catch (error) {
+    res.status(400).json({ error: 'Invalid TLE data' });
+    return;
+  }
+  checkCollision(data)
+    .then(result => {
+      res.json(result);
+    })
+    .catch(error => {
+      res.json({ error: 'An error occurred while checking for collision' });
+    });
+});
+
+function ParseTLE(tleData) {
+  const lines = tleData.split('\n');
+  const tle1 = lines[0];
+  const tle2 = lines[1];
+
+  const satelliteNumber = tle1.slice(2, 8);
+  const internationalDesignator = tle1.slice(9, 17).trim();
+  const epochYear = tle1.slice(17, 19);
+  const epochDay = tle1.slice(19, 32).trim();
+  const firstTimeDerivative = tle1.slice(32, 41);
+  const secondTimeDerivative = tle1.slice(42, 49);
+  const bstar = tle1.slice(50, 57);
+  const elementNumber = tle1.slice(60, 65);
+  const inclination = tle2.slice(8, 15);
+  const rightAscension = tle2.slice(16, 24);
+  const eccentricity = tle2.slice(25, 32);
+  const argumentOfPerigee = tle2.slice(33, 41);
+  const meanAnomaly = tle2.slice(42, 50);
+  const meanMotion = tle2.slice(51, 62);
+  const revolutionNumber = tle2.slice(63, 68);
+
+  return {
+    SatelliteNumber: satelliteNumber,
+    InternationalDesignator: internationalDesignator,
+    EpochYear: epochYear,
+    EpochDay: epochDay,
+    FirstTimeDerivative: firstTimeDerivative,
+    SecondTimeDerivative: secondTimeDerivative,
+    BSTAR: bstar,
+    ElementNumber: elementNumber,
+    Inclination: inclination,
+    RightAscension: rightAscension,
+    Eccentricity: eccentricity,
+    ArgumentOfPerigee: argumentOfPerigee,
+    MeanAnomaly: meanAnomaly,
+    MeanMotion: meanMotion,
+    RevolutionNumber: revolutionNumber,
+  };
+}
+
+app.post('/addNewSatellite', authenticateToken, (req, res) => {
+  const {
+    name,
+    tleData,
+    collision,
+    secondSatelliteId,
+  } = req.body;
+  const userId = req.user.id;
+  const tle = ParseTLE(tleData);
+  connection.beginTransaction(function (err) {
+    if (err) {
+      throw err;
+    }
+    connection.query('INSERT INTO ObjData (Name, User_Id) VALUES (?, ?)', [name, userId], function (err, result) {
+      if (err) {
+        connection.rollback(function () {
+          throw err;
+        });
+      }
+      const ObjectId = result.insertId;
+      //insert into OrbitData
+      connection.query('INSERT INTO OrbitData (ObjectId, SatelliteNumber, InternationalDesignator, EpochYear, EpochDay, FirstTimeDerivative, SecondTimeDerivative, BSTAR, ElementNumber, Inclination, RightAscension, Eccentricity, ArgumentOfPerigee, MeanAnomaly, MeanMotion, RevolutionNumber) VALUES (?, ?, ? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,?)', [ObjectId, tle.SatelliteNumber, tle.InternationalDesignator, tle.EpochYear, tle.EpochDay, tle.FirstTimeDerivative, tle.SecondTimeDerivative, tle.BSTAR, tle.ElementNumber, tle.Inclination, tle.RightAscension, tle.Eccentricity, tle.ArgumentOfPerigee, tle.MeanAnomaly, tle.MeanMotion, tle.RevolutionNumber], function (err, result) {
+        if (err) {
+          connection.rollback(function () {
+            throw err;
+          });
+        }
+        if (collision) {
+          connection.query('INSERT INTO Collisions (Object1, Object2, CollisionTime, User_ID) VALUES (?, ?, ?, ?)', [ObjectId, secondSatelliteId, new Date(), userId], function (err, result) {
+            if (err) {
+              connection.rollback(function () {
+                throw err;
+              });
+            }
+            connection.commit(function (err) {
+              if (err) {
+                connection.rollback(function () {
+                  throw err;
+                });
+              }
+              res.json({ message: 'Satellite added successfully' });
+            });
+          });
+        } else {
+          connection.commit(function (err) {
+            if (err) {
+              connection.rollback(function () {
+                throw err;
+              });
+            }
+            res.json({ message: 'Satellite added successfully' });
+          });
+        }
+      }
+      );
+    }
+    );
+  }
+  );
+});
+
+app.put('/updateSatellite', authenticateToken, (req, res) => {
+  const { id, data } = req.body;
+  connection.query('UPDATE ObjData SET Name = ?, Payload = ?, Mass = ?, Vmag = ?, LaunchDate = ? WHERE id = ?', [data.name, data.payload, data.mass, data.vmag, data.launchDate, id], (err, results) => {
+    if (err) {
+      res.status(500).json({ error: 'An error occurred while updating data' });
+      return;
+    }
+    res.json({ message: 'Satellite updated successfully' });
+  }
+  );
+} 
+);
 
 
 app.listen(5174, () => {
