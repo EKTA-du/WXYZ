@@ -1,25 +1,11 @@
 <template>
   <div id="cesiumContainer"></div>
   <div class="operate_container">
-    <div
-      class="menu_button"
-      @click="drawer = !drawer"
-      title="Satellite Category selection"
-    >
-      <img
-        src="../../assets/menu.svg"
-        width="28"
-        height="28"
-        alt="Satellite Category selection"
-      />
+    <div class="menu_button" @click="drawer = !drawer" title="Satellite Category selection">
+      <img src="../../assets/menu.svg" width="28" height="28" alt="Satellite Category selection" />
     </div>
     <div class="menu_button" @click="clearSatelliteOrbit" title="clear orbit">
-      <img
-        src="../../assets/hide.svg"
-        width="24"
-        height="24"
-        alt="clear orbit"
-      />
+      <img src="../../assets/hide.svg" width="24" height="24" alt="clear orbit" />
     </div>
     <div class="menu_button" @click="handleLogout" title="Logout">
       <img src="../../assets/logout.svg" width="24" height="24" alt="Logout" />
@@ -27,14 +13,15 @@
     <div class="menu_button" @click="RedirecToGitHub" title="GitHub">
       <img src="../../assets/github.svg" width="24" height="24" alt="Github" />
     </div>
+    <div class="menu_button" @click="addNewSatellite" title="AddSatellite">
+      <img src="../../assets/upload.svg" width="24" height="24" alt="Add Satellite" />
+    </div>
+
   </div>
   <div v-if="selectedSatellite" id="satDataCard" class="card">
     <div class="card__product-img">
-      <img
-        class="card__img"
-        alt="product-image"
-        src="https://images.news18.com/ibnlive/uploads/2023/01/space-comms-future.jpg"
-      />
+      <img class="card__img" alt="product-image"
+        src="https://images.news18.com/ibnlive/uploads/2023/01/space-comms-future.jpg" />
     </div>
     <div class="card__content">
       <p class="card__name">{{ selectedSatellite.Name }}</p>
@@ -60,10 +47,10 @@
       <p class="card__description">
         Payload:
         {{
-          selectedSatellite.Payload !== "0"
-            ? selectedSatellite.Payload
-            : "Unknown"
-        }}
+      selectedSatellite.Payload !== "0"
+        ? selectedSatellite.Payload
+        : "Unknown"
+    }}
       </p>
     </div>
     <div class="card__footer">
@@ -74,10 +61,10 @@
       <p class="card__autor">
         Manufacturer:
         {{
-          selectedSatellite.Manufacturer !== "0"
-            ? selectedSatellite.Manufacturer
-            : "Unknown"
-        }}
+      selectedSatellite.Manufacturer !== "0"
+        ? selectedSatellite.Manufacturer
+        : "Unknown"
+    }}
       </p>
     </div>
   </div>
@@ -86,11 +73,28 @@
     <el-checkbox-group v-model="checked" class="checkbox-group">
       <template v-for="sat in allSatellite" :key="sat.value">
         <el-checkbox :label="sat.value" :name="sat.value">{{
-          sat.label
-        }}</el-checkbox>
+      sat.label
+    }}</el-checkbox>
       </template>
     </el-checkbox-group>
   </el-drawer>
+
+  <el-dialog title="Add New Satellite" :visible.sync="dialogVisible">
+    <el-form :model="newSatellite">
+      <el-form-item label="Satellite Name">
+        HII
+        <!-- <el-input v-model="newSatellite.name">TEST</el-input> -->
+      </el-form-item>
+      <el-form-item label="TLE Data">
+        HELLo
+        <!-- <el-input type="textarea" v-model="newSatellite.tleData">TEST</el-input> -->
+      </el-form-item>
+    </el-form>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="dialogVisible = false">Cancel</el-button>
+      <el-button type="primary" @click="submitNewSatellite">Confirm</el-button>
+    </span>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -109,6 +113,7 @@ import {
 } from "@/http/index";
 
 import SatelliteEntity from "@/js/SatelliteEntity";
+import { ElMessageBox } from "element-plus";
 
 let allSatellite;
 
@@ -124,6 +129,11 @@ const checked = ref([]);
 const clickedSatelliteArray = [];
 
 const selectedSatellite = ref(null);
+var dialogVisible = ref(true);
+const newSatellite = ref({
+  name: "",
+  tleData: "",
+});
 
 Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
 
@@ -181,7 +191,7 @@ function initCesium() {
   dayLayer.show = true;
   viewer.scene.globe.enableLighting = true;
   viewer.clock.shouldAnimate = true;
-  nightLayer.dayAlpha = 0;  
+  nightLayer.dayAlpha = 0;
 
   // viewer.resolutionScale = 1;
 
@@ -227,7 +237,7 @@ function addCesiumEventListener() {
       selectedSatellite.value = null;
     }
   },
-  Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 
 async function getTleData(path) {
@@ -263,6 +273,17 @@ async function addSatellite(data) {
   }
 }
 
+function addNewSatellite() {
+  console.log("add new satellite");
+    dialogVisible.value = true;
+  }
+
+  function submitNewSatellite() {
+    // Here you can handle the submission of the new satellite data
+    // For example, you can call an API to store the new satellite data
+    console.log(newSatellite.value);
+    dialogVisible.value = false;
+  }
 function handleLogout() {
   ElMessageBox.confirm("Are you sure you want to log out?", "hint", {
     confirmButtonText: "Sure",
