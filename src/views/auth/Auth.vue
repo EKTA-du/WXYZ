@@ -2,7 +2,7 @@
   <div class="vertical-center">
     <div class="form-container">
       <div class="header">
-        <div class="logo">Satellite &nbsp;&nbsp; Tracker</div>
+        <div class="logo">SPACE &nbsp;&nbsp; Object&nbsp;&nbsp; Tracker</div>
       </div>
       <br />
       <div class="main-container">
