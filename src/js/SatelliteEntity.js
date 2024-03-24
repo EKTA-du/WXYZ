@@ -9,6 +9,7 @@ class SatelliteEntity {
         const id = tle.id;
         const name = tle.NAME;
         this.userOwned = tle.User_Id;
+        this.collisionDetected = tle.collision;
 
         this.id = id;
         this.name = name.trim();
@@ -68,10 +69,10 @@ class SatelliteEntity {
             },
             path: new Cesium.PathGraphics({
                 width: 1,
-                show: false,
+                show: this.collisionDetected ? true : false,
                 leadTime: this.leadTime,
                 trailTime: this.trailTime,
-                material: Cesium.Color.LIME,
+                material: this.collisionDetected ? Cesium.Color.RED : Cesium.Color.LIME,
             }),
             label: {
                 text: this.userOwned !== null ? this.name + "(User Owned)" : this.name,
@@ -85,6 +86,9 @@ class SatelliteEntity {
                 pixelOffset: new Cesium.Cartesian2(0, 5),
                 fillColor: Cesium.Color.WHITE,
                 distanceDisplayCondition: new Cesium.DistanceDisplayCondition(10.0, 5000000),
+            },
+            option: {
+                collision: this.collisionDetected,
             }
         }
         return satelliteEntity;

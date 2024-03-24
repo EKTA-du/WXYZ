@@ -7,7 +7,7 @@ import authenticateToken from './auth.js';
 import connection from './db.js';
 import ParseTLE from './tle.js';
 import checkCollision from './collision.js';
-
+import { JWT_SECRET } from './auth.js';
 const app = express();
 
 
@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/satdata', authenticateToken, (req, res) => {
-  const limit = parseInt(req.query.limit);
+  let limit = parseInt(req.query.limit);
   if (!limit) {
     limit = 10;
   }
@@ -29,14 +29,29 @@ app.get('/satdata', authenticateToken, (req, res) => {
   UNION ALL
   (SELECT Obj.id, Obj.NAME, Obj.User_Id, Orbit.SatelliteNumber, Orbit.InternationalDesignator, Orbit.EpochYear, Orbit.EpochDay, Orbit.FirstTimeDerivative, Orbit.SecondTimeDerivative, Orbit.BSTAR, Orbit.ElementNumber, Orbit.Inclination, Orbit.RightAscension, Orbit.Eccentricity, Orbit.ArgumentOfPerigee, Orbit.MeanAnomaly, Orbit.MeanMotion, Orbit.RevolutionNumber FROM ObjData Obj INNER JOIN OrbitData Orbit ON Obj.id = Orbit.ObjectId WHERE Obj.User_Id = ?)
 `;
-connection.query(query, [limit, User_Id], (err, results) => {
-  if (err) {
-    console.log(err);
-    res.status(500).json({ error: 'An error occurred while fetching data' });
-    return;
-  }
-  res.json(results);
-});
+  connection.query(query, [limit, User_Id], (err, results) => {
+    if (err) {
+      console.log(err);
+      res.status(500).json({ error: 'An error occurred while fetching data' });
+      return;
+    }
+    connection.query('SELECT Object1, Object2 FROM Collisions WHERE User_Id = ?', [User_Id], (err, collisionResults) => {
+      if (err) {
+        console.log(err);
+        res.status(500).json({ error: 'An error occurred while fetching data' });
+        return;
+      }
+      let collisionSatIds = collisionResults.map(result => result.Object1).concat(collisionResults.map(result => result.Object2));
+      results.forEach(result => {
+        if (collisionSatIds.includes(result.id)) {
+          result.collision = true;
+        } else {
+          result.collision = false;
+        }
+      });
+      res.json(results);
+    });
+  });
 });
 
 app.get('/types', (req, res) => {
@@ -52,7 +67,7 @@ app.get('/types', (req, res) => {
 });
 
 app.get('/getSatByType', (req, res) => {
-  const limit = parseInt(req.query.limit);
+  let limit = parseInt(req.query.limit);
   if(!limit) {
     limit = 10;
   }
@@ -168,7 +183,7 @@ app.post('/addNewSatellite', authenticateToken, (req, res) => {
     name,
     tleData,
     collision,
-    secondSatelliteId,
+    secondSatelliteNumber,
   } = req.body;
   const userId = req.user.id;
   const tle = ParseTLE(tleData);
@@ -191,7 +206,7 @@ app.post('/addNewSatellite', authenticateToken, (req, res) => {
           });
         }
         if (collision) {
-          connection.query('INSERT INTO Collisions (Object1, Object2, CollisionTime, User_ID) VALUES (?, ?, ?, ?)', [ObjectId, secondSatelliteId, new Date(), userId], function (err, result) {
+          connection.query('INSERT INTO Collisions (Object1, Object2, CollisionTime, User_ID) VALUES (?, ?, ?, ?)', [ObjectId, secondSatelliteNumber, new Date(), userId], function (err, result) {
             if (err) {
               connection.rollback(function () {
                 throw err;

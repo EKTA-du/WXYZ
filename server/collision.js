@@ -14,6 +14,13 @@ function checkCollision(tleData) {
         return;
       }
       for (const orbitData of results) {
+        if (orbitData.SatelliteNumber === tleData.SatelliteNumber) {
+          resolve({
+            collision: true,
+            satelliteNumber: orbitData.ObjectId
+          });
+          return;
+        }
         const {
           Inclination,
           RightAscension,
@@ -26,24 +33,21 @@ function checkCollision(tleData) {
           `1 ${orbitData.SatelliteNumber}U ${orbitData.InternationalDesignator} ${orbitData.EpochYear}${orbitData.EpochDay} ${orbitData.FirstTimeDerivative} ${orbitData.SecondTimeDerivative} ${orbitData.BSTAR} 0 ${orbitData.ElementNumber}`,
           `2 ${orbitData.SatelliteNumber} ${Inclination} ${RightAscension} ${Eccentricity} ${ArgumentOfPerigee} ${MeanAnomaly} ${MeanMotion} ${orbitData.RevolutionNumber}`
         );
-
         const positionTle = satellite.propagate(satrec, now).position;
         const positionDb = satellite.propagate(satrecDb, now).position;
         if (!positionTle || !positionDb) {
           continue;
         }
-        // Calculate the distance between the two satellites
         const distance = Math.sqrt(
           Math.pow(positionTle.x - positionDb.x, 2) +
           Math.pow(positionTle.y - positionDb.y, 2) +
           Math.pow(positionTle.z - positionDb.z, 2)
         );
-        // Check if the distance is within a certain threshold (e.g., 100 km)
-        if (distance < 100) {
-          // Collision detected
+
+        if (distance < 10000) {
           resolve({
             collision: true,
-            satelliteNumber: orbitData.SatelliteNumber,
+            satelliteNumber: orbitData.ObjectId
           });
           return;
         }
