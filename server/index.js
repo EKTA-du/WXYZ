@@ -1,8 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config({ path: './.env' });
 import authenticateToken from './auth.js';
 import connection from './db.js';
 import ParseTLE from './tle.js';

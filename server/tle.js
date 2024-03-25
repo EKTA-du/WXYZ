@@ -1,5 +1,3 @@
-
-
 function ParseTLE(tleData) {
   const lines = tleData.split('\n');
   const tle1 = lines[0];
