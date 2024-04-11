@@ -36,12 +36,12 @@
     "eslint": "^8.22.0",
     "eslint-plugin-vue": "^9.3.0",
     "install": "^0.13.0",
-    "npm": "^9.9.3",
+    "npm": "^10.5.2",
     "prettier": "^2.7.1",
     "sass": "^1.57.1",
     "sass-loader": "^13.2.0",
     "unplugin-auto-import": "^0.12.1",
     "unplugin-vue-components": "^0.22.12",
-    "vite": "^4.5.2"
+    "vite": "^4.5.3"
   }
 }
