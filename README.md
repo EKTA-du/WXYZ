@@ -1,6 +1,6 @@
 # SPACE OBJECT TRACKER (Satellite Tracker)
 
-A **5th Semester DBMS Mini-project** submitted in partial fulfillment of the requirements for the degree of Bachelor of Engineering in Computer Science and Engineering at Visvesvaraya Technological University.
+A **5th Semester DBMS Mini-project** submitted in partial fulfillment of the requirements for the degree of Bachelor of Engineering in Computer Science and Engineering at **Visvesvaraya Technological University.**
 
 **The Space Object Tracker** is a sophisticated web application that leverages cutting-edge technologies such as Vue.js, Cesium, and Three.js for the frontend, and Node.js with Express and a MySQL database for the backend.
 
